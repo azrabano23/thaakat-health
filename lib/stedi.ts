@@ -41,7 +41,9 @@ export async function checkEligibility(opts: {
   const body = {
     provider: { npi: opts.npi ?? '1999999984', organizationName: 'Thaakat Health' },
     subscriber: opts.patient.subscriber,
-    encounter: { serviceTypeCodes: opts.serviceTypeCodes ?? ['30'] },
+    // '30' = general health benefit plan coverage; '62' = MRI/CAT scan — check the CONFIRMATORY
+    // scan specifically (keep '30' so the cost card never empties if a payer omits STC-62).
+    encounter: { serviceTypeCodes: opts.serviceTypeCodes ?? ['30', '62'] },
     tradingPartnerServiceId: opts.patient.tradingPartnerServiceId,
   };
 
@@ -61,16 +63,18 @@ export async function checkEligibility(opts: {
     (data.status ?? '').toLowerCase() === 'active' ||
     benefits.some((b) => b.code === '1' || /active/i.test(b.name ?? ''));
 
-  // authOrCertIndicator: Y = prior auth required, N = not, U = undetermined
+  // authOrCertIndicator: Y = prior auth required, N = not, U = undetermined. Per Stedi, an ABSENT
+  // indicator means auth is NOT required — so default to 'N', never a misleading "unknown".
   const authFlag =
-    benefits.map((b) => b.authOrCertIndicator).find((v) => v === 'Y' || v === 'N' || v === 'U') ?? 'unknown';
+    benefits.map((b) => b.authOrCertIndicator).find((v) => v === 'Y' || v === 'N' || v === 'U') ?? 'N';
 
   const copayObj = benefits.find((b) => b.code === 'B'); // Co-Payment
   const dedObj = benefits.find((b) => b.code === 'C'); // Deductible
 
   return {
     active,
-    planName: benefits.find((b) => b.planCoverage)?.planCoverage,
+    // planCoverage is not a field in the 271 schema — read the real top-level plan info.
+    planName: data.planInformation?.planName ?? data.planStatus?.[0]?.planDetails,
     copay: copayObj?.benefitAmount,
     deductible: dedObj?.benefitAmount,
     priorAuthRequired: authFlag as EligibilityResult['priorAuthRequired'],

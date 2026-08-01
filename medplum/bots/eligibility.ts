@@ -46,6 +46,9 @@ export async function handler(
     insurer: request.insurer ?? { display: 'Aetna (test)' },
     insurance: [
       {
+        // R4 requires CoverageEligibilityResponse.insurance[].coverage — echo the request's
+        // coverage, or a synthetic display reference in the demo.
+        coverage: request.insurance?.[0]?.coverage ?? { display: 'Demo coverage (synthetic)' },
         inforce: active,
         item: [
           {

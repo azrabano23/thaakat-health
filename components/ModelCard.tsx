@@ -13,9 +13,27 @@ const px = (fpr: number) => P + fpr * (W - 2 * P);
 const py = (tpr: number) => H - P - tpr * (H - 2 * P);
 
 const DATASETS = [
-  { name: 'GLENDA v1.5', role: 'Trained on', detail: 'Real laparoscopy frames — 500 pathology / 5,490 no-pathology (n=5,990).' },
-  { name: 'UT-EndoMRI', role: 'Production path', detail: 'Same texture pipeline on patient-level pelvic MRI (133 real annotated cases).' },
-  { name: 'MMOTU', role: 'Ultrasound arm', detail: 'Multi-modal ovarian ultrasound — the generalization surface.' },
+  {
+    name: 'GLENDA v1.5',
+    role: 'Trained on',
+    detail: 'Real laparoscopy frames — 500 pathology / 5,490 no-pathology (n=5,990).',
+    cite: 'Leibetseder et al., MMM 2020 · ITEC, Univ. Klagenfurt',
+    href: 'http://ftp.itec.aau.at/datasets/GLENDA/',
+  },
+  {
+    name: 'UT-EndoMRI',
+    role: 'Production path',
+    detail: 'Same texture pipeline on patient-level pelvic MRI (133 real annotated cases).',
+    cite: 'Zenodo — open access',
+    href: 'https://zenodo.org/records/10574745',
+  },
+  {
+    name: 'MMOTU',
+    role: 'Ultrasound arm',
+    detail: 'Multi-modal ovarian ultrasound — the generalization surface.',
+    cite: 'Zhao et al. — open dataset',
+    href: 'https://github.com/cv516Buaa/MMOTU_DS2Net',
+  },
 ];
 
 export function ModelCard() {
@@ -91,7 +109,12 @@ export function ModelCard() {
             <div key={d.name} className="md-row">
               <span className="md-tag">{d.role}</span>
               <span className="md-name">{d.name}</span>
-              <span className="md-detail">{d.detail}</span>
+              <span className="md-detail">
+                {d.detail}{' '}
+                <a className="md-cite" href={d.href} target="_blank" rel="noreferrer">
+                  {d.cite} ↗
+                </a>
+              </span>
             </div>
           ))}
         </div>

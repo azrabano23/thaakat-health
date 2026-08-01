@@ -10,7 +10,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "seed": "npx --yes tsx scripts/seed-fhir.ts",
-    "seed:moss": "npx --yes tsx scripts/seed-moss.ts"
+    "seed:moss": "npx --yes tsx scripts/seed-moss.ts",
+    "bots:build": "for b in intake-to-fhir eligibility reread-on-imaging; do npx --yes esbuild medplum/bots/$b.ts --bundle --platform=node --target=node22 --format=cjs --external:@medplum/core --external:pdfmake --outfile=medplum/dist/$b.js; done"
   },
   "dependencies": {
     "@deepgram/sdk": "^5.7.0",
