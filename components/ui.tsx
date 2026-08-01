@@ -244,10 +244,10 @@ export function StatTile({
   className?: string;
 }) {
   return (
-    <div className={cx('stat', className)}>
-      <div className="stat-num">{value}</div>
-      <div className="stat-label">{label}</div>
-      {source && <div className="stat-source">{source}</div>}
+    <div className={cx('metric', className)}>
+      <div className="metric-val">{value}</div>
+      <div className="metric-label">{label}</div>
+      {source && <div className="tag" style={{ marginTop: 8, display: 'block' }}>{source}</div>}
     </div>
   );
 }
@@ -272,10 +272,11 @@ export function SectionHeading({
   return (
     <div className={cx('sh', className)}>
       {(eyebrow || index) && (
-        <span className="eyebrow">
-          {index && <span className="num">{index}</span>}
-          {eyebrow}
-        </span>
+        <div className="runhead">
+          {index && <span className="no">{index}</span>}
+          {eyebrow && <span>{eyebrow}</span>}
+          <span className="ln" />
+        </div>
       )}
       <h2 className="display display-lg">{title}</h2>
       {lede && <p className="sh-lede">{lede}</p>}
@@ -320,9 +321,10 @@ export function Nav({
             ))}
           </div>
 
-          <Button href={cta.href} variant="gold" size="sm" trailingIcon={<ArrowIcon />}>
+          <Link href={cta.href} className="nav-cta">
             {cta.label}
-          </Button>
+            <ArrowIcon />
+          </Link>
         </div>
       </div>
     </nav>
@@ -366,7 +368,7 @@ export function Footer() {
               </div>
             </div>
             <span className="fine">طاقت · strength</span>
-            <span className="fine" style={{ color: 'var(--gold-deep)' }}>YC × Medplum · 2026</span>
+            <span className="fine" style={{ color: 'var(--signal)' }}>YC × Medplum · 2026</span>
           </div>
         </div>
       </div>
@@ -413,14 +415,12 @@ export function ClusterCard({ match, coverage }: { match: ClusterMatch; coverage
   return (
     <div className="cluster">
       <div className="cluster-head">
-        <span className="eyebrow" style={{ margin: 0 }}>
-          <span className="num">◆</span> Pattern nobody assembled
-        </span>
+        <span className="label-sig">◆ Pattern nobody assembled</span>
         <span className="cluster-conf">
           <span className="cluster-meter">
             <span style={{ width: `${pct}%` }} />
           </span>
-          <span className="text-gold" style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 650, fontSize: 13 }}>
+          <span style={{ color: 'var(--signal)', fontVariantNumeric: 'tabular-nums', fontWeight: 650, fontSize: 13 }}>
             {pct}%
           </span>
         </span>
@@ -548,4 +548,5 @@ export {
   ClinicIcon,
 } from './icons';
 export { HeroVisual } from './HeroVisual';
+export { ScanPlate } from './ScanPlate';
 export { ArchitectureFlow, MarketExpansion } from './diagrams';

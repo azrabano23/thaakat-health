@@ -1,23 +1,13 @@
 import {
   Nav,
   Footer,
-  Button,
-  Pill,
-  StatTile,
   SectionHeading,
-  HeroVisual,
   FounderCard,
   ArchitectureFlow,
   MarketExpansion,
+  ScanPlate,
   ArrowIcon,
   CheckIcon,
-  MicIcon,
-  AssembleIcon,
-  ScanIcon,
-  PatternIcon,
-  OrdersIcon,
-  ClinicIcon,
-  TrendIcon,
 } from '@/components/ui';
 
 const NAV_LINKS = [
@@ -35,11 +25,11 @@ const STATS = [
 ];
 
 const WORKFLOW = [
-  { n: '01', icon: <MicIcon />, title: 'Intake', body: 'A calm spoken interview captures the symptom story that forms and rushed visits lose.' },
-  { n: '02', icon: <AssembleIcon />, title: 'Assemble the record', body: 'Every note, lab, and scan across every specialist — pulled into one timeline through patient-access APIs.' },
-  { n: '03', icon: <ScanIcon />, title: 'Re-read the scan', body: 'A real radiomics model re-reads the under-read MRI or ultrasound for signs a routine read misses.' },
-  { n: '04', icon: <PatternIcon />, title: 'Surface the pattern', body: 'The cluster engine connects what nobody assembled — and raises a question for the clinician, not a diagnosis.' },
-  { n: '05', icon: <OrdersIcon />, title: 'Orders & coverage', body: 'One-click orders and prior auth, a live coverage check, and a physician-ready FHIR brief.' },
+  { n: '01', title: 'Intake', body: 'A calm spoken interview captures the symptom story that forms and rushed visits lose.' },
+  { n: '02', title: 'Assemble the record', body: 'Every note, lab, and scan across every specialist — pulled into one timeline through patient-access APIs.' },
+  { n: '03', title: 'Re-read the scan', body: 'A real radiomics model re-reads the under-read MRI or ultrasound for signs a routine read misses.' },
+  { n: '04', title: 'Surface the pattern', body: 'The cluster engine connects what nobody assembled — and raises a question for the clinician, not a diagnosis.' },
+  { n: '05', title: 'Orders & coverage', body: 'One-click orders and prior auth, a live coverage check, and a physician-ready FHIR brief.' },
 ];
 
 const MODEL = [
@@ -58,28 +48,29 @@ const BUYERS = ['Academic medical centers', 'Fertility clinics', 'Women’s-heal
 
 export default function Home() {
   return (
-    <>
-      <div className="bg-field" aria-hidden="true" />
-      <div className="bg-grain" aria-hidden="true" />
+    <div className="paper">
+      <div className="field" aria-hidden="true" />
+      <div className="grain" aria-hidden="true" />
 
       <Nav links={NAV_LINKS} cta={{ label: 'See the demo', href: '/intake' }} />
 
       <main>
         {/* ============================ 1 · HERO ============================ */}
         <section className="section hero" id="top">
-          <div className="hero-sidenote" aria-hidden="true">
-            <span className="sidenote">Thaakat · طاقت · strength</span>
-          </div>
           <div className="shell">
-            <div className="hero-grid">
+            <div className="runhead hero-eyebrow rise rise-1">
+              <span className="no">Thaakat</span>
+              <span>Bringing it to light</span>
+              <span className="ln" />
+            </div>
+
+            <h1 className="display display-xl rise rise-2">
+              To diagnose endometriosis, doctors still have to{' '}
+              <span className="italic underscore">cut you open.</span>
+            </h1>
+
+            <div className="mag hero-lower">
               <div className="hero-copy">
-                <span className="eyebrow rise rise-1">Thaakat — bringing it to light</span>
-
-                <h1 className="display display-lg rise rise-2" style={{ marginTop: 18 }}>
-                  To diagnose endometriosis, doctors still have to{' '}
-                  <span className="text-lume">cut you open.</span>
-                </h1>
-
                 <p className="lede rise rise-2">
                   There’s no non-invasive test — surgery <em>is</em> the diagnostic test. So 1 in 10 women —{' '}
                   <strong>190 million</strong> — spend 7–10 years and seven doctors in pain, missing work, losing
@@ -87,28 +78,35 @@ export default function Home() {
                 </p>
 
                 <p className="hero-motto rise rise-3">
-                  The answer was already there. <span className="text-gold">Thaakat reads it.</span>
+                  The answer was already there. <span className="sig">Thaakat reads it.</span>
                 </p>
 
                 <div className="hero-cta rise rise-3">
-                  <Button href="/intake" variant="gold" size="lg" trailingIcon={<ArrowIcon />}>
-                    See the live demo
-                  </Button>
-                  <Button href="#founders" variant="outline" size="lg">
+                  <a href="/intake" className="btn btn-lg">
+                    <span>See the live demo</span>
+                    <ArrowIcon />
+                  </a>
+                  <a href="#founders" className="tlink">
                     Meet the founders
-                  </Button>
+                    <ArrowIcon />
+                  </a>
                 </div>
 
-                <div className="hero-meta rise rise-4">
-                  <Pill dot>Since 2026</Pill>
-                  <Pill>Built on FHIR R4</Pill>
-                  <Pill tone="gold">Decision-support, not diagnosis</Pill>
+                <div className="hero-metaline meta rise rise-4">
+                  Since 2026 <span className="sig">/</span> Built on FHIR R4 <span className="sig">/</span> Decision-support,
+                  not diagnosis
                 </div>
               </div>
 
-              <div className="hero-visual rise rise-3">
-                <HeroVisual />
-              </div>
+              <figure className="hero-figure plate-fig rise rise-3">
+                <div className="plate-frame">
+                  <ScanPlate />
+                </div>
+                <figcaption className="plate-cap">
+                  <span className="fno">Fig. 1</span>
+                  <span>Pelvic MRI (T2). Thaakat’s radiomics overlay flags the lesion a routine read called “normal.”</span>
+                </figcaption>
+              </figure>
             </div>
           </div>
         </section>
@@ -122,18 +120,21 @@ export default function Home() {
               title={
                 <>
                   The answer is usually already in the chart.
-                  <br className="hide-sm" /> <span className="text-muted">No one’s job is to read it all together.</span>
+                  <br className="hide-sm" /> <span className="muted">No one’s job is to read it all together.</span>
                 </>
               }
             />
 
-            <p className="pull" style={{ marginTop: 34 }}>
-              Diagnostic delay isn’t a knowledge problem — it’s an <span className="text-gold">assembly problem</span>.
-              The clues are documented across specialists, years apart, and nobody reads them together.
+            <p
+              className="dropcap"
+              style={{ marginTop: 34, maxWidth: '60ch', fontSize: 'clamp(1.15rem, 1.7vw, 1.4rem)', lineHeight: 1.5, color: 'var(--text-2)' }}
+            >
+              Diagnostic delay isn’t a knowledge problem — it’s an <span className="ink-flag">assembly problem</span>. The
+              clues are documented across specialists, years apart, and nobody reads them together.
             </p>
 
-            <div className="card card-lg card-gold" style={{ marginTop: 30 }}>
-              <span className="label-gold">Why the wait is so long</span>
+            <div className="aside" style={{ marginTop: 32 }}>
+              <span className="label-sig">Why the wait is so long</span>
               <h3>There is no non-invasive test. Surgery is the test.</h3>
               <p style={{ maxWidth: '74ch' }}>
                 Confirming endometriosis means laparoscopy — so women wait 4–11 years for a surgeon to agree to cut.
@@ -143,15 +144,22 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="card-glass" style={{ borderRadius: 'var(--r-lg)', overflow: 'hidden', marginTop: 22 }}>
-              <div className="stat-divide">
-                {STATS.map((s) => (
-                  <StatTile key={s.source} value={s.value} label={s.label} source={s.source} />
-                ))}
+            <div className="spread" style={{ marginTop: 40 }}>
+              <div className="spread-h">
+                <span>Finding</span>
+                <span>What the record already shows</span>
+                <span>Source</span>
               </div>
+              {STATS.map((s) => (
+                <div key={s.source} className="spread-row">
+                  <div className="spread-fig">{s.value}</div>
+                  <div className="spread-txt">{s.label}</div>
+                  <div className="spread-src">{s.source}</div>
+                </div>
+              ))}
             </div>
 
-            <p className="sh-lede" style={{ marginTop: 26, maxWidth: '64ch' }}>
+            <p className="sh-lede" style={{ marginTop: 28, maxWidth: '64ch' }}>
               Endometriosis affects roughly <strong style={{ color: 'var(--text)' }}>1 in 10 women — 190 million</strong>{' '}
               worldwide: the women’s-health beachhead into every delayed, under-read condition. Solve the longest,
               most-stigmatized odyssey first, then generalize.
@@ -169,24 +177,21 @@ export default function Home() {
               lede="Voice is the sensor. Assembling the record and re-reading the scan are the moat. Every run ends in a physician-ready brief — and a clear, covered action."
             />
 
-            <div className="rail" style={{ marginTop: 40 }}>
+            <div className="steps-ed" style={{ marginTop: 40 }}>
               {WORKFLOW.map((s) => (
-                <div key={s.n} className="card card-hover step">
-                  <div className="step-num">{s.n}</div>
-                  <div className="step-icon">{s.icon}</div>
+                <div key={s.n} className="step-ed">
+                  <span className="n">{s.n}</span>
                   <h3>{s.title}</h3>
                   <p>{s.body}</p>
                 </div>
               ))}
             </div>
 
-            <div className="views" style={{ marginTop: 22 }}>
-              <div className="card card-lg">
+            <div className="views" style={{ marginTop: 44 }}>
+              <div className="view">
                 <div className="view-head">
-                  <Pill tone="gold" dot>
-                    Patient app
-                  </Pill>
-                  <span className="badge">what she experiences</span>
+                  <span className="label-sig">Patient app</span>
+                  <span className="tag">what she experiences</span>
                 </div>
                 <ul className="view-list">
                   <li><CheckIcon /><span>Talk to Thaakat in plain language, any time — no forms, no gatekeeping.</span></li>
@@ -194,10 +199,10 @@ export default function Home() {
                   <li><CheckIcon /><span>Walk into the visit with the right questions already framed.</span></li>
                 </ul>
               </div>
-              <div className="card card-lg">
+              <div className="view">
                 <div className="view-head">
-                  <Pill dot>Clinician console</Pill>
-                  <span className="badge">what they buy</span>
+                  <span className="label-sig">Clinician console</span>
+                  <span className="tag">what they buy</span>
                 </div>
                 <ul className="view-list">
                   <li><CheckIcon /><span>The <b>Dossier</b>: the whole record plus the re-read scan, every claim sourced.</span></li>
@@ -219,27 +224,21 @@ export default function Home() {
               lede="Not fee-for-service doctors — they profit from repeat visits. We sell to the people who carry the cost of a decade-long search, and win when it ends sooner."
             />
 
-            <div className="card card-lg" style={{ marginTop: 36, display: 'flex', gap: 18, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-              <span className="step-icon" style={{ margin: 0 }}>
-                <ClinicIcon />
-              </span>
-              <div style={{ flex: '1 1 320px' }}>
-                <div className="row wrap" style={{ gap: 10, marginBottom: 8 }}>
-                  <strong style={{ fontSize: 16 }}>Beachhead: academic medical centers &amp; women’s-health, fertility, and imaging clinics.</strong>
-                  <Pill tone="gold">Start here</Pill>
-                </div>
-                <p className="muted" style={{ margin: '0 0 14px', fontSize: 14, lineHeight: 1.6, maxWidth: '70ch' }}>
-                  They already run the MRI and transvaginal ultrasound Thaakat re-reads. They compete on outcomes and
-                  credibility, and a better-assembled, non-invasive workup pays for itself in a single avoided failed
-                  cycle — the kind of clear ROI that closes a pilot.
-                </p>
-                <div className="row wrap" style={{ gap: 8 }}>
-                  {BUYERS.map((b) => (
-                    <span key={b} className="chip">
-                      {b}
-                    </span>
-                  ))}
-                </div>
+            <div className="aside" style={{ marginTop: 34 }}>
+              <span className="label-sig">The wedge</span>
+              <h3>Beachhead: academic medical centers, women’s-health, fertility &amp; imaging clinics.</h3>
+              <p style={{ maxWidth: '72ch' }}>
+                They already run the MRI and transvaginal ultrasound Thaakat re-reads. They compete on outcomes and
+                credibility, and a better-assembled, non-invasive workup pays for itself in a single avoided failed
+                cycle — the kind of clear ROI that closes a pilot.
+              </p>
+              <div className="row wrap" style={{ gap: 8, marginTop: 18 }}>
+                <span className="pill pill-signal">Start here</span>
+                {BUYERS.map((b) => (
+                  <span key={b} className="chip">
+                    {b}
+                  </span>
+                ))}
               </div>
             </div>
           </div>
@@ -255,7 +254,7 @@ export default function Home() {
               lede="A B2B clinical-decision-support SaaS. Pilot on the imaging clinics already run, prove it, publish it, and become the structured intelligence layer for endometriosis care."
             />
 
-            <div className="metrics" style={{ marginTop: 40 }}>
+            <div className="metrics" style={{ marginTop: 42 }}>
               {MODEL.map((m) => (
                 <div key={m.val} className="metric">
                   <div className="metric-val">{m.val}</div>
@@ -264,18 +263,15 @@ export default function Home() {
               ))}
             </div>
 
-            <div style={{ marginTop: 34 }}>
-              <span className="label-gold" style={{ display: 'block', marginBottom: 14 }}>
+            <div style={{ marginTop: 40 }}>
+              <span className="label-sig" style={{ display: 'block', marginBottom: 16 }}>
                 The path — pilot to standard of care
               </span>
               <MarketExpansion />
             </div>
 
-            <div style={{ marginTop: 34 }}>
-              <span className="label-gold" style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 14 }}>
-                <span className="step-icon" style={{ margin: 0, width: 30, height: 30, borderRadius: 9 }}>
-                  <TrendIcon />
-                </span>
+            <div style={{ marginTop: 40 }}>
+              <span className="label-sig" style={{ display: 'block', marginBottom: 16 }}>
                 What renews the contract
               </span>
               <div className="metrics">
@@ -303,52 +299,49 @@ export default function Home() {
               lede="Not a wrapper. Four sponsors do real work in the loop — and the moat is a trained radiomics model reading the pixels a radiologist skipped."
             />
 
-            <div style={{ marginTop: 36 }}>
-              <span className="label-gold" style={{ display: 'block', marginBottom: 16 }}>
+            <div style={{ marginTop: 38 }}>
+              <span className="label-sig" style={{ display: 'block', marginBottom: 16 }}>
                 System architecture — every stage load-bearing
               </span>
               <ArchitectureFlow />
             </div>
 
-            <div className="card cluster" style={{ marginTop: 24 }}>
-              <div className="cluster-head">
-                <span className="eyebrow" style={{ margin: 0 }}>
-                  <span className="num">◆</span> The imaging moat
-                </span>
-                <Pill tone="gold" dot>
-                  Founder’s own research
-                </Pill>
+            <div className="aside" style={{ marginTop: 26 }}>
+              <div className="row wrap" style={{ justifyContent: 'space-between', gap: 12 }}>
+                <span className="label-sig">◆ The imaging moat</span>
+                <span className="pill pill-signal pill-dot">Founder’s own research</span>
               </div>
-              <h3 style={{ marginTop: 14 }}>EndoDetect: a trained radiomics model, not a mock.</h3>
-              <p className="cluster-narr" style={{ maxWidth: '72ch' }}>
-                Thaakat’s moat is <strong style={{ color: 'var(--text)' }}>EndoDetect</strong> — Azra’s radiomics model
-                that turns routine MRI and ultrasound into non-invasive endometriosis detection <em>before</em> surgery.
-                A real <strong style={{ color: 'var(--text)' }}>PyRadiomics</strong> pipeline extracts real features
-                from real, public imaging data, with an honest, cross-validated result — the hard modality other teams
-                can’t stand up in a weekend.
+              <h3>EndoDetect: a trained radiomics model, not a mock.</h3>
+              <p style={{ maxWidth: '74ch' }}>
+                Thaakat’s moat is <strong>EndoDetect</strong> — Azra’s radiomics model that turns routine MRI and
+                ultrasound into non-invasive endometriosis detection <em>before</em> surgery. A real{' '}
+                <strong>PyRadiomics</strong> pipeline extracts real features from real, public imaging data, with an
+                honest, cross-validated result — the hard modality other teams can’t stand up in a weekend.
               </p>
-              <div className="evidence" style={{ marginTop: 20 }}>
+              <div className="evidence">
                 <div className="evi">
-                  <div className="evi-val pending">AUC {"0.967 AUC (5-fold CV)"}</div>
-                  <div className="evi-label">Cross-validated on held-out imaging — reported honestly.</div>
+                  <div className="evi-val">0.967</div>
+                  <div className="evi-label">AUC, 5-fold cross-validated on held-out imaging — reported honestly.</div>
                 </div>
                 <div className="evi">
                   <div className="evi-val">PyRadiomics</div>
                   <div className="evi-label">Real features extracted from the pixels, not a hardcoded label.</div>
                 </div>
                 <div className="evi">
-                  <div className="evi-val pending">{"GLENDA (real endometriosis, n=5,990)"}</div>
-                  <div className="evi-label">Trained on real, public imaging data.</div>
+                  <div className="evi-val" style={{ fontSize: '1.2rem' }}>GLENDA · n=5,990</div>
+                  <div className="evi-label">Trained on a real, public endometriosis imaging dataset.</div>
                 </div>
               </div>
             </div>
 
-            <div className="row wrap" style={{ gap: 12, marginTop: 26 }}>
-              <Button href="/intake" variant="gold" trailingIcon={<ArrowIcon />}>
-                See it work — the live demo
-              </Button>
-              <span className="muted" style={{ fontSize: 13.5, alignSelf: 'center' }}>
-                Deepgram · Claude · Moss · Medplum · Stedi — all four sponsors, in one run.
+            <div className="row wrap" style={{ gap: 18, marginTop: 28 }}>
+              <a href="/intake" className="btn">
+                <span>See it work — the live demo</span>
+                <ArrowIcon />
+              </a>
+              <span className="meta">
+                Deepgram <span className="sig">/</span> Claude <span className="sig">/</span> Moss{' '}
+                <span className="sig">/</span> Medplum <span className="sig">/</span> Stedi — all in one run
               </span>
             </div>
           </div>
@@ -364,7 +357,7 @@ export default function Home() {
               lede="Voice, real-time retrieval, FHIR, and a trained imaging model — plus the lived research behind the moat."
             />
 
-            <div className="founders" style={{ marginTop: 36 }}>
+            <div className="founders" style={{ marginTop: 40 }}>
               <FounderCard
                 name="Azra Bano"
                 role="Co-founder"
@@ -374,10 +367,10 @@ export default function Home() {
                     Repeat medtech founder (5×, <strong>~$7M raised</strong>). AI/ML researcher at Robert Wood Johnson
                     University Hospital — radiomics and MRI/ultrasound AI for cardio-gynecologic health. She built{' '}
                     <strong>EndoDetect</strong>: radiomics that turns routine MRI and ultrasound into non-invasive
-                    endometriosis detection before surgery. Thaakat is that proven imaging engine wrapped in a full agent.
-                    She didn’t discover this problem for a hackathon — she pitched and built a company for it. Previously
-                    SWE at Google and a quant at Goldman Sachs; 1st place NASA SpaceTech (international); quantum-ML at
-                    Columbia; Rutgers ECE + Math.
+                    endometriosis detection before surgery. Thaakat is that proven imaging engine wrapped in a full
+                    agent. She didn’t discover this problem for a hackathon — she pitched and built a company for it.
+                    Previously SWE at Google and a quant at Goldman Sachs; 1st place NASA SpaceTech (international);
+                    quantum-ML at Columbia; Rutgers ECE + Math.
                   </>
                 }
                 highlights={[
@@ -414,15 +407,15 @@ export default function Home() {
               />
             </div>
 
-            <div className="card card-lg card-gold" style={{ marginTop: 18 }}>
-              <span className="label-gold">Why this team</span>
-              <p style={{ marginTop: 10, maxWidth: '82ch' }}>
+            <div className="aside" style={{ marginTop: 34 }}>
+              <span className="label-sig">Why this team</span>
+              <p style={{ marginTop: 12, maxWidth: '84ch', color: 'var(--text-2)' }}>
                 Azra and Nitu met at <strong>Road to Silicon V/Alley</strong> — New Jersey’s largest entrepreneurship
-                organization — where both rose to lead it. They flew across the country to SF hackathons together and won
-                repeatedly, including healthcare voice agents (Meridian) and a Y&nbsp;Combinator reinforcement-learning
-                hackathon. They’re now in SF full-time.
+                organization — where both rose to lead it. They flew across the country to SF hackathons together and
+                won repeatedly, including healthcare voice agents (Meridian) and a Y&nbsp;Combinator
+                reinforcement-learning hackathon. They’re now in SF full-time.
               </p>
-              <p className="founder-angle" style={{ borderTop: 'none', paddingTop: 8, marginTop: 12 }}>
+              <p className="founder-angle">
                 “We’ve already built healthcare voice AI together — and we win in YC’s own rooms.”
               </p>
             </div>
@@ -431,6 +424,6 @@ export default function Home() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }
