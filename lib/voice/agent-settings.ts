@@ -36,7 +36,7 @@ export const CLINICAL_KEYTERMS = [
   'menorrhagia',
   'dyschezia',
   'ANA',
-  'Sjogrens',
+  "Sjögren's",
   'xerostomia',
   'tissue transglutaminase',
 ];
@@ -193,12 +193,24 @@ export function buildSettings(inputSampleRate: number) {
           keyterms: CLINICAL_KEYTERMS,
         },
       },
-      think: {
-        provider: { type: 'anthropic', model: 'claude-haiku-4-5', temperature: 0.4 },
-        prompt: THAAKAT_VOICE_PROMPT,
-        functions: THAAKAT_FUNCTIONS,
-      },
-      speak: { provider: { type: 'deepgram', model: 'aura-2-thalia-en' } },
+      // Fallback array: try our preferred Claude first, fall back to a Deepgram-managed id that's
+      // guaranteed provisioned — so if the newer id isn't managed yet, live voice degrades instead
+      // of silently erroring on stage. (For any Claude id, a BYO think.endpoint → Anthropic works,
+      // but that would put the key in browser-sent settings, so we keep the managed provider.)
+      think: [
+        {
+          provider: { type: 'anthropic', model: 'claude-haiku-4-5', temperature: 0.4 },
+          prompt: THAAKAT_VOICE_PROMPT,
+          functions: THAAKAT_FUNCTIONS,
+        },
+        {
+          provider: { type: 'anthropic', model: 'claude-3-5-haiku-latest', temperature: 0.4 },
+          prompt: THAAKAT_VOICE_PROMPT,
+          functions: THAAKAT_FUNCTIONS,
+        },
+      ],
+      // Empathetic, calm clinical voice — not the energetic default — for a patient dismissed for years.
+      speak: { provider: { type: 'deepgram', model: 'aura-2-harmonia-en' } },
       greeting: THAAKAT_GREETING,
     },
   };
