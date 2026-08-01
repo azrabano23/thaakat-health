@@ -26,6 +26,8 @@ import type {
   Device,
   ServiceRequest,
   Claim,
+  Coverage,
+  Organization,
   Task,
   Provenance,
   DocumentReference,
@@ -155,11 +157,17 @@ export type ChartBundleInput = {
   patient: Reference<Patient>;
   extraction: ClinicalExtraction;
   transcriptDoc?: Reference<DocumentReference>; // Provenance source, if the transcript was stored
+  // Real references for the prior-auth Claim. Both fields are REQUIRED-and-a-Reference in R4, and
+  // every member of `Reference<T>` is optional, so a `{ display: '...' }` stub type-checks while
+  // pointing at nothing. Passing the resolved resources (lib/fhir/coverage.ts) is what makes the
+  // Claim resolvable in the Medplum UI instead of a dead end.
+  coverage?: Reference<Coverage>;
+  provider?: Reference<Organization>;
 };
 
 const urn = () => `urn:uuid:${randomUUID()}`;
 
-export function buildChartBundle({ patient, extraction, transcriptDoc }: ChartBundleInput): Bundle {
+export function buildChartBundle({ patient, extraction, transcriptDoc, coverage, provider }: ChartBundleInput): Bundle {
   const entries: BundleEntry[] = [];
   const provenanceTargets: Reference[] = [];
   const add = (resource: BundleEntry['resource'], url: string, ifNoneExist?: string): string => {
@@ -263,8 +271,8 @@ export function buildChartBundle({ patient, extraction, transcriptDoc }: ChartBu
           patient,
           created: new Date().toISOString(),
           priority: { coding: [{ system: SYSTEMS.processPriority, code: 'normal' }] },
-          provider: { display: 'Thaakat (demo provider)' },
-          insurance: [{ sequence: 1, focal: true, coverage: { display: 'Demo coverage' } }],
+          provider: provider ?? { display: 'Thaakat (demo provider)' },
+          insurance: [{ sequence: 1, focal: true, coverage: coverage ?? { display: 'Demo coverage' } }],
           diagnosis: [{ sequence: 1, diagnosisReference: { reference: conditionUrn } }],
         } as Claim,
         'Claim',

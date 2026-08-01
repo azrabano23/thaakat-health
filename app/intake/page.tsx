@@ -185,6 +185,9 @@ export default function Intake() {
         cluster: top ? { name: top.cluster.name, ask: top.cluster.ask, confidence: top.confidence } : undefined,
         patientName: patient.name,
         demoPatientId: patient.id, // resolves the seeded chart — lib/demo-identity.ts
+        payer: patient.payer,
+        eligibility: cov ?? undefined,
+        serviceTypeCodes: top?.cluster.confirmatory.serviceTypeCodes,
       }),
     })
       .then((x) => x.json())

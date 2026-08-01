@@ -265,6 +265,10 @@ export class ThaakatToolRunner {
       patientName: this.patient.name,
       // Write onto her seeded chart rather than a fresh Patient — see lib/demo-identity.ts.
       demoPatientId: this.patient.id,
+      // Persist what the payer actually said, alongside the clinical picture.
+      payer: this.patient.payer,
+      eligibility: this.coverage ?? undefined,
+      serviceTypeCodes: top?.cluster.confirmatory.serviceTypeCodes,
     });
     this.events.onCommit?.(committed);
     return {

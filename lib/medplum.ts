@@ -8,9 +8,10 @@
 // FHIR R4 only. Synthetic data only. Decision-support / navigation — never diagnosis.
 
 import { MedplumClient, createReference } from '@medplum/core';
-import type { Patient, DocumentReference, Reference } from '@medplum/fhirtypes';
+import type { Patient, DocumentReference, Reference, Coverage, Organization } from '@medplum/fhirtypes';
 import { buildChartBundle, extractionFromChartInput } from './fhir/model';
 import { resolveDemoPatient } from './demo-identity';
+import { isPayerKey, recordEligibility, resolveCoverage, type EligibilitySummary } from './fhir/coverage';
 
 let cached: MedplumClient | null = null;
 
@@ -42,6 +43,14 @@ export type ChartInput = {
   imagingFindings?: string[]; // radiomics narration lines
   referral?: { specialty: string; imaging?: string; cptCode?: string };
   priorAuthRequired?: boolean;
+  // Which Stedi test payer priced this (DemoPatient.payer). Resolves a real Coverage + payer
+  // Organization so the prior-auth Claim points at resources instead of display-only stubs.
+  payer?: string;
+  // The eligibility answer already fetched by /api/eligibility, persisted here as the
+  // CoverageEligibilityRequest/Response pair. Passed in rather than re-fetched so the chart
+  // records the same answer the patient was actually told.
+  eligibility?: EligibilitySummary;
+  serviceTypeCodes?: string[];
   cluster?: { name: string; ask: string; confidence: number }; // the assembled pattern -> DetectedIssue
   transcript?: string; // raw intake transcript -> DocumentReference (Provenance source)
 };
@@ -100,12 +109,47 @@ export async function commitChart(input: ChartInput): Promise<CommitResult> {
     }
   }
 
-  // 3. build the clinical graph from the structured extraction and commit it atomically.
+  // 3. coverage — a real Coverage + payer Organization, and the payer's answer on the record.
+  //    Failure here must not lose the clinical write: the assembled picture is the point, the
+  //    price is context. Degrade to display-only stubs rather than dropping the whole commit.
+  let coverageRef: Reference<Coverage> | undefined;
+  let providerRef: Reference<Organization> | undefined;
+  if (isPayerKey(input.payer)) {
+    try {
+      const { coverage, insurer } = await resolveCoverage(medplum, patientRef, input.payer);
+      coverageRef = createReference(coverage);
+      providerRef = createReference(insurer);
+      ids[`Coverage:${coverage.id}`] = coverage.id!;
+
+      if (input.eligibility) {
+        const { request, response } = await recordEligibility({
+          medplum,
+          patient: patientRef,
+          coverage,
+          insurer,
+          result: input.eligibility,
+          serviceTypeCodes: input.serviceTypeCodes,
+        });
+        ids[`CoverageEligibilityRequest:${request.id}`] = request.id!;
+        ids[`CoverageEligibilityResponse:${response.id}`] = response.id!;
+      }
+    } catch (e) {
+      console.warn('[medplum] coverage write failed (continuing):', (e as Error).message);
+    }
+  }
+
+  // 4. build the clinical graph from the structured extraction and commit it atomically.
   const extraction = extractionFromChartInput({ ...input, transcript });
-  const bundle = buildChartBundle({ patient: patientRef, extraction, transcriptDoc });
+  const bundle = buildChartBundle({
+    patient: patientRef,
+    extraction,
+    transcriptDoc,
+    coverage: coverageRef,
+    provider: providerRef,
+  });
   const result = await medplum.executeBatch(bundle);
 
-  // 4. collect the created ids from the transaction response (location: "Type/{id}/_history/1")
+  // 5. collect the created ids from the transaction response (location: "Type/{id}/_history/1")
   for (const entry of result.entry ?? []) {
     const loc = entry.response?.location;
     if (!loc) continue;

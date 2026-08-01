@@ -9,6 +9,7 @@ import { MedplumClient, createReference } from '@medplum/core';
 import type { Bundle } from '@medplum/fhirtypes';
 import { loadEnv } from './env';
 import { demoPatientIdentifier, findDemoPatient, identifierSearchValue } from '../lib/demo-identity';
+import { COVERAGE_SYSTEM, PAYERS, PAYER_SYSTEM } from '../lib/fhir/coverage';
 
 // Reads .env then .env.local, ignoring empty values — see scripts/env.ts for why that matters.
 loadEnv();
@@ -50,6 +51,9 @@ function entry(fullUrl: string, resource: any, ifNoneExist?: string) {
 // the assembled picture lands on this chart rather than on a fresh empty one.
 const MARIA_IDENTIFIER = demoPatientIdentifier('maria');
 
+// Maria's payer, kept in one place so the seeded Coverage and the live Stedi call cannot drift.
+const MARIA_PAYER = PAYERS.uhc;
+
 const bundle: Bundle = {
   resourceType: 'Bundle',
   type: 'transaction',
@@ -59,9 +63,20 @@ const bundle: Bundle = {
       { resourceType: 'Patient', identifier: [MARIA_IDENTIFIER], name: [{ given: ['Maria'], family: 'Doe' }], gender: 'female', birthDate: '1994-05-02' },
       `identifier=${identifierSearchValue(MARIA_IDENTIFIER)}`,
     ),
+    // Maria prices against the UHC test payer (lib/clusters.ts: payer: 'uhc'), so her Coverage has
+    // to name UnitedHealthcare. It previously said AETNA12345 / "Aetna (test)" — her chart and her
+    // insurer disagreed, and `payor` was a display-only stub pointing at no Organization at all.
+    // Only the UHC test payer returns authOrCertIndicator, which is what drives the prior-auth beat.
+    entry(localRef('payer-org'), {
+      resourceType: 'Organization', active: true,
+      identifier: [{ system: PAYER_SYSTEM, value: MARIA_PAYER.tradingPartnerServiceId }],
+      name: `${MARIA_PAYER.name} (Stedi test mode)`,
+    }),
     entry(localRef('coverage'), {
       resourceType: 'Coverage', status: 'active', beneficiary: { reference: P },
-      subscriberId: 'AETNA12345', payor: [{ display: 'Aetna (test)' }],
+      identifier: [{ system: COVERAGE_SYSTEM, value: MARIA_PAYER.memberId }],
+      subscriberId: MARIA_PAYER.memberId,
+      payor: [{ reference: localRef('payer-org') }],
     }),
     // Encounters across specialties (the fragmentation)
     entry(encRef('gp'), { resourceType: 'Encounter', status: 'finished', class: { code: 'AMB' }, subject: { reference: P }, serviceType: { text: 'Primary Care' }, period: { start: '2022-09-14' } }),
