@@ -28,11 +28,11 @@ const STATS = [
 ];
 
 const WORKFLOW = [
-  { n: '01', title: 'Intake', body: 'A calm spoken interview captures the symptom story that forms and rushed visits lose.' },
-  { n: '02', title: 'Assemble the record', body: 'Every note, lab, and scan across every specialist — pulled into one timeline through patient-access APIs.' },
-  { n: '03', title: 'Re-read the scan', body: 'A real radiomics model re-reads the under-read MRI or ultrasound for signs a routine read misses.' },
-  { n: '04', title: 'Surface the pattern', body: 'The cluster engine connects what nobody assembled — and raises a question for the clinician, not a diagnosis.' },
-  { n: '05', title: 'Orders & coverage', body: 'One-click orders and prior auth, a live coverage check, and a physician-ready FHIR brief.' },
+  { n: '01', title: 'You talk — it charts as you speak', body: 'You check in by talking to a voice agent. The conversation becomes clinical documentation in real time — capturing the symptom story that forms and rushed visits lose.' },
+  { n: '02', title: 'Deep-researched, with your full history', body: 'Any issue you describe — even a simple rash — is researched against the guidelines and your own record, so the next question is tailored to you, not generic.' },
+  { n: '03', title: 'Your data, re-read and visualized', body: 'Every note, lab, and scan is assembled into one timeline, and the under-read scan is re-read by a real model — so you can see what was hiding in your own record.' },
+  { n: '04', title: 'An n=1 plan, peer-reviewed by an expert', body: 'A personalized next-steps plan (a FHIR CarePlan), flagged for a human specialist to peer-review before your visit — decision-support, never an autonomous diagnosis.' },
+  { n: '05', title: 'Cost & coverage, up front', body: 'Ask what it costs and whether insurance covers it — a live eligibility check — before you ever see the doctor.' },
 ];
 
 const MODEL = [
@@ -76,8 +76,8 @@ const SPONSOR_RUN = [
     n: '04',
     tool: 'Medplum',
     role: 'FHIR system of record',
-    body: 'A finding a clinician can’t verify is worthless, so everything lands as real, typed FHIR — not a chat log. One transaction writes the whole picture: a DetectedIssue (author = the radiomics Device, implicated = the cluster) plus Condition, Observations, DiagnosticReport, ServiceRequest, Claim(preauth) and Task, and a Provenance proving every resource is AI-derived from the transcript. We use Medplum because it makes the assembled record auditable, interoperable, and something a real EHR can ingest.',
-    proof: '13 resources / run',
+    body: 'A finding a clinician can’t verify is worthless, so everything lands as real, typed FHIR — not a chat log. One transaction writes the whole picture: a DetectedIssue (author = the radiomics Device), a RiskAssessment with the model’s confidence, an n=1 CarePlan, a CommunicationRequest flagging a human specialist to peer-review it, plus Condition, Observations, DiagnosticReport, ServiceRequest, Claim(preauth), Task — and a Provenance proving every resource is AI-derived from the transcript. We use Medplum because it makes the assembled record auditable, interoperable, and something a real EHR can ingest.',
+    proof: '16 resources / run',
   },
   {
     n: '05',
@@ -270,8 +270,8 @@ export default function Home() {
             <SectionHeading
               index="№ 02"
               eyebrow="The solution"
-              title="From one conversation to a covered next step."
-              lede="Voice is the sensor. Assembling the record and re-reading the scan are the moat. Every run ends in a physician-ready brief — and a clear, covered action."
+              title="The doctor's visit of the future — before you see a doctor."
+              lede="Voice-first: you talk, it charts as you speak, deep-researches your issue against your full history, builds an n=1 plan a human expert peer-reviews, and tells you the cost — all before the visit. Endometriosis is where we prove it, because it's the hardest case: the answer is usually already hidden in the record."
             />
 
             <div className="steps-ed" style={{ marginTop: 40 }}>

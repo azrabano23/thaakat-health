@@ -23,7 +23,7 @@ Every new Medplum project auto-creates a **`<Project> Default Client`** (`packag
 - `buildChartBundle()` → a `type:"transaction"` Bundle with `urn:uuid` fullUrls + `ifNoneExist` — Medplum rewrites the cross-references on commit (`packages/core/src/client.ts` `executeBatch`). One atomic write produces: Observations, a provisional Condition, the **DetectedIssue** (`author` = radiomics `Device`, `implicated` = the cluster, R4 `patient` field), a radiomics DiagnosticReport, ServiceRequest, `Claim(use="preauthorization")` + Task, and a **Provenance** whose `entity[].what` points at the transcript DocumentReference — proving every resource is AI-derived from that transcript.
 - The transcript itself is stored as a real **Binary** via `createDocumentReference` (`securityContext` = patient) — never base64 in `Attachment.data` (per CLAUDE.md; Binary access is gated by securityContext because Binary isn't searchable).
 
-Verified live: one `/api/medplum/commit` call writes **13 resources** atomically.
+Verified live: one `/api/medplum/commit` call writes **16 resources** atomically.
 
 ## 4. Bots + Subscriptions (enabled: bots, cron, ai, ai-realtime)
 

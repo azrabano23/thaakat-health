@@ -54,7 +54,7 @@ const ARCH: ArchNode[] = [
     role: 'FHIR · DetectedIssue',
     icon: <RecordIcon />,
     tag: 'writes',
-    note: 'A finding a doctor can’t verify is worthless, so everything becomes real, auditable medical data. One atomic write creates 13 typed FHIR resources — headlined by a DetectedIssue authored by the radiomics “device,” with a Provenance trail proving each one was derived from her transcript. It’s a chart a real hospital system can ingest, not a chat log.',
+    note: 'A finding a doctor can’t verify is worthless, so everything becomes real, auditable medical data. One atomic write creates 16 typed FHIR resources — the DetectedIssue, a RiskAssessment carrying the model’s confidence, an n=1 CarePlan, and a CommunicationRequest that flags a human specialist to peer-review it — each with a Provenance trail proving it was derived from her transcript. A chart a real hospital system can ingest, not a chat log.',
   },
   {
     name: 'Stedi',

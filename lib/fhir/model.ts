@@ -25,6 +25,8 @@ import type {
   DetectedIssue,
   RiskAssessment,
   ClinicalImpression,
+  CarePlan,
+  CommunicationRequest,
   Device,
   ServiceRequest,
   Claim,
@@ -280,9 +282,10 @@ export function buildChartBundle({ patient, extraction, transcriptDoc }: ChartBu
   }
 
   // referral → ServiceRequest, with prior auth modeled as Claim(preauthorization) + Task
+  let srUrn: string | undefined;
   if (extraction.referral) {
     const proc = extraction.referral.procedureKey ? PROCEDURE_CODES[extraction.referral.procedureKey] : undefined;
-    const srUrn = add(
+    srUrn = add(
       {
         resourceType: 'ServiceRequest',
         status: 'active',
@@ -323,6 +326,41 @@ export function buildChartBundle({ patient, extraction, transcriptDoc }: ChartBu
         'Task',
       );
     }
+  }
+
+  // The n=1, before-you-see-a-doctor beats: a personalized pre-visit plan (CarePlan) and a request
+  // for a human expert to peer-review it (CommunicationRequest). Decision-support — the plan is a
+  // set of suggested next steps for the clinician, never an autonomous treatment order.
+  if (extraction.cluster) {
+    add(
+      {
+        resourceType: 'CarePlan',
+        status: 'draft',
+        intent: 'plan',
+        subject: patient,
+        title: 'Personalized pre-visit plan (Thaakat)',
+        description: extraction.cluster.ask,
+        addresses: [{ reference: conditionUrn }],
+        ...(srUrn ? { activity: [{ reference: { reference: srUrn } }] } : {}),
+      } as CarePlan,
+      'CarePlan',
+    );
+    add(
+      {
+        resourceType: 'CommunicationRequest',
+        status: 'active',
+        subject: patient,
+        about: [{ reference: conditionUrn }],
+        recipient: [{ display: 'OB/GYN / endometriosis specialist' }],
+        reasonReference: [{ reference: conditionUrn }],
+        payload: [
+          {
+            contentString: `Peer review requested before the visit — ${extraction.cluster.name}. ${extraction.cluster.ask}`,
+          },
+        ],
+      } as CommunicationRequest,
+      'CommunicationRequest',
+    );
   }
 
   // Provenance — prove every resource above is AI-derived from THIS transcript (audit trail).
