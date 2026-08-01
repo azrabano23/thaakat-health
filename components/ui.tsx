@@ -365,7 +365,7 @@ export function Footer() {
                 ))}
               </div>
             </div>
-            <span className="fine">نور · light</span>
+            <span className="fine">طاقت · strength</span>
             <span className="fine" style={{ color: 'var(--gold-deep)' }}>YC × Medplum · 2026</span>
           </div>
         </div>

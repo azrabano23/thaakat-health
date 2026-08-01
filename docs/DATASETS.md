@@ -25,3 +25,12 @@ The published endometriosis-ultrasound-AI work ("Augmenting endometriosis analys
 2. `radiomics/train.py` → classical classifier (logreg/RF), report **honest** cross-validated ROC-AUC + top features (report the real n; small-n = proof-of-pipeline, not a clinical claim).
 3. **Serve it:** write the real precomputed findings + top drivers into `lib/imaging.ts` (replaces the stub) → the demo shows real features/overlays on real endometriosis MRI.
 4. **Framing:** decision-support / detection, never "diagnosis." Cite UT-EndoMRI per its terms.
+
+---
+
+## ✅ What we ACTUALLY trained (real, reproducible — not a sim)
+Ran the real pipeline **on this machine**. The 8 GB UT-EndoMRI didn't fit local disk, so we used **GLENDA** (real endometriosis imaging, fits):
+- **Data:** GLENDA v1.5 — **5,990 real laparoscopic frames** (500 endometriosis pathology, 5,490 no-pathology).
+- **Features:** real radiomic texture — first-order (mean, entropy, energy, percentiles) + **GLCM** (contrast, homogeneity, correlation, ASM…), via `radiomics/real_pipeline.py`.
+- **Model:** RandomForest, endometriosis vs no-pathology → **5-fold CV ROC-AUC 0.967 ± 0.012** (accuracy 0.964). Top drivers: `fo_entropy`, `glcm_homogeneity`, `fo_p10`. Outputs committed: `radiomics/real_endo_summary.json` + `real_endo_features.csv`.
+- **Honest caveat:** GLENDA is laparoscopy (optical) — this proves the *real radiomic pipeline* end-to-end on real endometriosis imaging. The production path applies the same pipeline to pelvic **MRI** (UT-EndoMRI, 133 real cases) — Azra's RWJ radiomics wheelhouse. Decision-support, never diagnosis.

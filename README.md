@@ -1,6 +1,6 @@
 # Thaakat 🩺🎙️ — read this first (teammate brief)
 
-> **Thaakat** (نور — Urdu/Arabic for *"strength"*). **One line:**
+> **Thaakat** (طاقت — Urdu/Arabic for *"strength"*). **One line:**
 > **Thaakat is a voice agent that reads a woman's *whole* medical record — including the scan that was under-read — and assembles the picture nobody's job was to see, turning a 7–10 year diagnostic odyssey into one conversation.**
 >
 > This README is the full brief for the team (human + your Claude/Cursor). Deeper docs: [`docs/BUILD_KIT.md`](docs/BUILD_KIT.md) (build plan), [`docs/SPONSORS.md`](docs/SPONSORS.md) (exact keys/setup), [`CLAUDE.md`](CLAUDE.md) (coding rules).

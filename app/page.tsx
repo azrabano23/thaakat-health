@@ -68,7 +68,7 @@ export default function Home() {
         {/* ============================ 1 · HERO ============================ */}
         <section className="section hero" id="top">
           <div className="hero-sidenote" aria-hidden="true">
-            <span className="sidenote">Thaakat · نور · light</span>
+            <span className="sidenote">Thaakat · طاقت · strength</span>
           </div>
           <div className="shell">
             <div className="hero-grid">
