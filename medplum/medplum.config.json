@@ -1,0 +1,16 @@
+{
+  "bots": [
+    {
+      "name": "noor-intake-to-fhir",
+      "id": "REPLACE_WITH_BOT_ID",
+      "source": "bots/intake-to-fhir.ts",
+      "dist": "bots/intake-to-fhir.ts"
+    },
+    {
+      "name": "noor-eligibility",
+      "id": "REPLACE_WITH_BOT_ID",
+      "source": "bots/eligibility.ts",
+      "dist": "bots/eligibility.ts"
+    }
+  ]
+}

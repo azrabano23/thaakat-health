@@ -1,0 +1,29 @@
+{
+  "name": "noor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Noor — voice-first, multimodal diagnostic navigator for women's health (YC × Medplum hackathon)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@deepgram/sdk": "^5.7.0",
+    "@medplum/core": "^5.1.27",
+    "@medplum/fhirtypes": "^5.1.27",
+    "@moss-dev/moss": "^1.4.1",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

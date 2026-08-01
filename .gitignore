@@ -1,0 +1,30 @@
+# deps
+node_modules/
+.pnp
+.pnp.js
+
+# next
+.next/
+out/
+build/
+dist/
+
+# env / secrets (NEVER commit real keys)
+.env
+.env.local
+.env*.local
+.medplum/
+medplum/.env
+
+# vercel
+.vercel
+
+# misc
+.claude/
+.DS_Store
+*.log
+npm-debug.log*
+pnpm-debug.log*
+coverage/
+*.tsbuildinfo
+next-env.d.ts
