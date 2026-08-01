@@ -17,6 +17,9 @@ export async function POST(req: NextRequest) {
       active: true,
       planName: 'CHOICE PLUS (demo)',
       copay: '210',
+      coinsurance: '20%',
+      deductible: '500',
+      outOfPocket: '3000',
       priorAuthRequired: 'Y',
       _note: 'STEDI_API_KEY not set — returning demo coverage. Set the key for a real test-mode call.',
     });

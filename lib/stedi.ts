@@ -25,9 +25,12 @@ export const MOCK_PATIENTS = {
 export type EligibilityResult = {
   active: boolean;
   planName?: string;
-  copay?: string;
-  deductible?: string;
+  copay?: string; // code B — flat patient portion ($)
+  coinsurance?: string; // code A — patient % share, formatted "20%"
+  deductible?: string; // code C — remaining/annual deductible ($)
+  outOfPocket?: string; // code G — out-of-pocket max / stop-loss ($)
   priorAuthRequired: 'Y' | 'N' | 'U' | 'unknown';
+  authNote?: string; // when prior auth is 'U', the payer's free-text clarification
   raw?: unknown;
 };
 
@@ -68,17 +71,34 @@ export async function checkEligibility(opts: {
   const authFlag =
     benefits.map((b) => b.authOrCertIndicator).find((v) => v === 'Y' || v === 'N' || v === 'U') ?? 'N';
 
-  const copayObj = benefits.find((b) => b.code === 'B'); // Co-Payment
-  const dedObj = benefits.find((b) => b.code === 'C'); // Deductible
+  // Pick the benefit for a cost code, preferring in-network (Y) or applies-to-both (W) — otherwise
+  // the first out-of-network figure could overstate what she actually owes.
+  const pick = (code: string) => {
+    const matches = benefits.filter((b) => b.code === code);
+    return matches.find((b) => b.inPlanNetworkIndicatorCode === 'Y' || b.inPlanNetworkIndicatorCode === 'W') ?? matches[0];
+  };
+  // Co-Payment (B) / Deductible (C) / Out-of-Pocket max (G) carry benefitAmount ($); Co-Insurance (A)
+  // carries benefitPercent (decimal, e.g. "0.20" = the patient's 20% share).
+  const coinsurancePct = pick('A')?.benefitPercent;
+  // When prior auth is 'U' (payer can't determine in real time), the clarification is free-text.
+  const uBenefit = benefits.find((b) => b.authOrCertIndicator === 'U');
+  const authNote =
+    (uBenefit?.additionalInformation ?? [])
+      .map((a: { description?: string }) => a.description)
+      .filter(Boolean)
+      .join(' ') || undefined;
 
   return {
     active,
     // benefitsInformation[].planCoverage IS a real 271 field — the plan/product name (e.g. "Gold
     // 1-2-3"), sent when code is 1–8 and STC 30 is present. Fall back to the plan-info object.
     planName: benefits.find((b) => b.planCoverage)?.planCoverage ?? data.planInformation?.planName,
-    copay: copayObj?.benefitAmount,
-    deductible: dedObj?.benefitAmount,
+    copay: pick('B')?.benefitAmount,
+    coinsurance: coinsurancePct ? `${Math.round(parseFloat(coinsurancePct) * 100)}%` : undefined,
+    deductible: pick('C')?.benefitAmount,
+    outOfPocket: pick('G')?.benefitAmount,
     priorAuthRequired: authFlag as EligibilityResult['priorAuthRequired'],
+    authNote,
     raw: data,
   };
 }

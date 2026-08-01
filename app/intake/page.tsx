@@ -25,7 +25,17 @@ import { ImagingEvidence } from '@/components/ImagingEvidence';
 import LiveVoice from './LiveVoice';
 
 type Turn = { role: 'patient' | 'thaakat'; text: string };
-type Coverage = { active?: boolean; planName?: string; copay?: string; priorAuthRequired?: string; error?: string };
+type Coverage = {
+  active?: boolean;
+  planName?: string;
+  copay?: string;
+  coinsurance?: string;
+  deductible?: string;
+  outOfPocket?: string;
+  priorAuthRequired?: string;
+  authNote?: string;
+  error?: string;
+};
 type Committed = { dryRun?: boolean; ids?: Record<string, string>; note?: string; error?: string };
 type Retrieval = { ms: number; backend: string };
 
@@ -518,10 +528,16 @@ export default function Intake() {
                         <span className={coverage.active ? 'good' : 'bad'} style={{ fontWeight: 650 }}>
                           {coverage.active ? 'Covered' : 'Not covered'}
                         </span>
-                        {coverage.copay && <span className="muted">~${coverage.copay} out of pocket</span>}
+                        {coverage.copay && <span className="muted">${coverage.copay} copay</span>}
+                        {coverage.coinsurance && <span className="muted">{coverage.coinsurance} coinsurance</span>}
+                        {coverage.deductible && <span className="muted">${coverage.deductible} deductible</span>}
+                        {coverage.outOfPocket && <span className="muted">${coverage.outOfPocket} OOP max</span>}
                         {coverage.priorAuthRequired === 'Y' && <span className="pill pill-warn">prior auth started</span>}
+                        {coverage.priorAuthRequired === 'N' && <span className="muted">no prior auth needed</span>}
                         {coverage.priorAuthRequired === 'U' && (
-                          <span className="muted">prior auth undetermined by payer</span>
+                          <span className="muted">
+                            prior auth undetermined{coverage.authNote ? ` — ${coverage.authNote}` : ' by payer'}
+                          </span>
                         )}
                       </div>
                     )}
