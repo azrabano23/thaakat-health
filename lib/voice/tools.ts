@@ -253,7 +253,8 @@ export class ThaakatToolRunner {
       imagingFindings: this.imaging?.findings?.map((f) => f.clinicalDetail ?? f.narration),
       referral: top
         ? {
-            specialty: 'Gyn / endometriosis specialist',
+            // Follows the cluster that fired, not the person — see Cluster.referralSpecialty.
+            specialty: top.cluster.referralSpecialty,
             imaging: top.cluster.confirmatory.name,
             cptCode: top.cluster.confirmatory.cptCode,
           }

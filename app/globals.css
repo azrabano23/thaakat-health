@@ -630,6 +630,17 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
 .cluster-block p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--text); }
 .cluster-cost { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
 
+/* The engine ran and declined. Muted rail + muted label so a non-finding never reads as a finding. */
+.cluster-null { border-left-color: var(--border); }
+.cluster-null .label-sig { color: var(--muted); }
+.cluster-null h3 { color: var(--text-2); }
+.cluster-null .cluster-block .lbl { color: var(--muted); }
+.tagcheck { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.tagcheck li { font-family: var(--font-mono); font-size: 12.5px; display: flex; align-items: baseline; gap: 8px; }
+.tagcheck-hit { color: var(--text); }
+.tagcheck-miss { color: var(--faint); }
+.tagcheck em { font-style: normal; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+
 .convo { display: flex; flex-direction: column; gap: 14px; }
 .convo-row { display: flex; }
 .convo-row.patient { justify-content: flex-end; }
@@ -844,3 +855,29 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
   .rise { opacity: 1; transform: none; }
   .contour-draw { stroke-dashoffset: 0; }
 }
+
+/* ── Founders photo ────────────────────────────────────────────────────────────
+   Group shot above the two founder cards. Capped height with object-fit so a
+   tall phone photo can't push the cards off the fold, and the caption carries
+   the identification the photo can't. */
+.founders-photo { margin: 0 0 40px; }
+.founders-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 460px;
+  object-fit: cover;
+  object-position: center 34%; /* keeps faces in frame when the crop bites */
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--panel-2);
+}
+.founders-photo figcaption {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.founders-photo figcaption strong { color: var(--text-2); font-weight: 600; }

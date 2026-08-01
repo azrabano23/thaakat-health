@@ -10,9 +10,11 @@
 
 import { useRef, useState } from 'react';
 import {
+  CLUSTERS,
   DEMO_PATIENTS,
   getPatient,
   matchClusters,
+  nearMissCluster,
   mentionOf,
   type Finding,
   type ClusterMatch,
@@ -34,6 +36,9 @@ export default function Intake() {
   const [record, setRecord] = useState<Finding[]>([]);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [match, setMatch] = useState<ClusterMatch | null>(null);
+  // The closest cluster that fell SHORT, kept only when nothing fired. Rendering it is what turns
+  // "no pattern" from a blank panel into a legible non-finding.
+  const [nearMiss, setNearMiss] = useState<ClusterMatch | null>(null);
   const [coverage, setCoverage] = useState<Coverage | null>(null);
   const [committed, setCommitted] = useState<Committed | null>(null);
   const [phase, setPhase] = useState<'idle' | 'connecting' | 'interview' | 'reading' | 'assembled'>('idle');
@@ -47,6 +52,7 @@ export default function Intake() {
     setRecord([]);
     setTurns([]);
     setMatch(null);
+    setNearMiss(null);
     setCoverage(null);
     setCommitted(null);
     setRetrieval(null);
@@ -63,7 +69,12 @@ export default function Intake() {
         liveRecord.current = next;
         return next;
       }),
-    onCluster: setMatch,
+    // When the live call assembles nothing, fall back to the same near-miss panel the scripted run
+    // uses — otherwise a live run of the negative-control patient renders a blank card.
+    onCluster: (m: ClusterMatch | null) => {
+      setMatch(m);
+      setNearMiss(m ? null : nearMissCluster(liveRecord.current));
+    },
     onCoverage: (c: Coverage) => setCoverage(c),
     onCommit: (c: unknown) => setCommitted(c as Committed),
     onRetrieval: (ms: number, backend: string) => setRetrieval({ ms, backend }),
@@ -160,28 +171,30 @@ export default function Intake() {
     // 4) assemble the cluster
     const top = matchClusters(rec)[0] ?? null;
     setMatch(top);
+    setNearMiss(top ? null : nearMissCluster(rec));
     setPhase('assembled');
     await wait(430);
+    // assembledLine is per-patient and required, so it is also what she says when NOTHING fires.
+    say('thaakat', patient.assembledLine);
     if (top) {
-      say(
-        'thaakat',
-        patient.id === 'maria'
-          ? "When I put your history together — the timing of the pain, the bowel symptoms, the lab that wasn't followed up, and this scan — I see a pattern that is worth bringing to a specialist."
-          : "When I put these notes together, I see a pattern worth taking to a rheumatologist rather than treating each symptom separately.",
-      );
       await wait(320);
       say('thaakat', `The question I’d bring to your clinician is: ${top.cluster.ask}`);
     }
 
-    // 5) The Cost — live Stedi eligibility for the confirmatory step
-    const cov: Coverage | null = await fetch('/api/eligibility', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ patient: patient.payer, serviceTypeCodes: top?.cluster.confirmatory.serviceTypeCodes }),
-    })
-      .then((x) => x.json())
-      .catch(() => ({ error: 'unreachable' }));
-    setCoverage(cov);
+    // 5) The Cost — live Stedi eligibility for the confirmatory step.
+    // Skipped entirely when nothing fired: with no cluster there is no confirmatory service to
+    // price, and calling with `serviceTypeCodes: undefined` asked the payer about nothing.
+    let cov: Coverage | null = null;
+    if (top) {
+      cov = await fetch('/api/eligibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patient: patient.payer, serviceTypeCodes: top.cluster.confirmatory.serviceTypeCodes }),
+      })
+        .then((x) => x.json())
+        .catch(() => ({ error: 'unreachable' }));
+      setCoverage(cov);
+    }
     const pa = cov?.priorAuthRequired === 'Y';
     if (top && cov && !cov.error) {
       say(
@@ -201,7 +214,9 @@ export default function Intake() {
         imagingFindings: img?.findings?.map((f) => f.clinicalDetail ?? f.narration),
         referral: top
           ? {
-              specialty: 'Gyn / endometriosis specialist',
+              // Follows the cluster that fired. Hardcoding gyn here sent Dana's Sjögren's
+              // ServiceRequest to a gynecologist.
+              specialty: top.cluster.referralSpecialty,
               imaging: top.cluster.confirmatory.name,
               cptCode: top.cluster.confirmatory.cptCode,
             }
@@ -406,6 +421,55 @@ export default function Intake() {
                 <RecordTimeline record={record} />
               )}
             </div>
+
+            {/* The engine ran and declined. Neutral styling, not the signal color — a non-finding
+                must not read as a finding. Showing WHICH cluster came closest and which required
+                findings were absent is the answer to "does it ever say no?". */}
+            {!match && phase === 'assembled' && (
+              <div className="cluster cluster-null">
+                <div className="cluster-head">
+                  <span className="label-sig">◇ No pattern meets threshold</span>
+                  <span className="hud">{CLUSTERS.length} definitions evaluated</span>
+                </div>
+
+                <h3>Nothing to flag on this record</h3>
+                <p className="cluster-narr">
+                  Every shipped cluster definition was scored against her whole assembled record. None reached its
+                  required number of corroborating findings, so Thaakat raises nothing.
+                </p>
+
+                {nearMiss && (
+                  <div className="cluster-block">
+                    <span className="lbl">Closest — and why it fell short</span>
+                    <p style={{ marginBottom: 10 }}>{nearMiss.cluster.name}</p>
+                    <ul className="tagcheck">
+                      {nearMiss.matched.map((t) => (
+                        <li key={t} className="tagcheck-hit">
+                          <span aria-hidden="true">✓</span> {t}
+                        </li>
+                      ))}
+                      {nearMiss.missing.map((t) => (
+                        <li key={t} className="tagcheck-miss">
+                          <span aria-hidden="true">✗</span> {t} <em>absent</em>
+                        </li>
+                      ))}
+                    </ul>
+                    <p style={{ marginTop: 10, color: 'var(--muted)', fontSize: 13.5 }}>
+                      {nearMiss.matched.length} of {nearMiss.cluster.requiredTags.length} · needs{' '}
+                      {nearMiss.cluster.minMatch}
+                    </p>
+                  </div>
+                )}
+
+                <div className="cluster-block">
+                  <span className="lbl">What this does not mean</span>
+                  <p style={{ color: 'var(--text-2)', fontSize: 14 }}>
+                    Not a clean bill of health, and not a claim of specificity — only that nothing on this record
+                    matches a pattern Thaakat ships. No DetectedIssue is written and no referral is raised.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {match && (
               <div className="cluster">
