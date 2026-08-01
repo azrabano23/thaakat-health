@@ -1,20 +1,15 @@
-// Medplum FHIR client (server-side, client-credentials) + chart-writing helpers.
-// Writes the structured picture Thaakat builds: Condition, Observations, DiagnosticReport (radiomics),
-// ServiceRequest (referral), Coverage, Claim(use="preauthorization"), Task (PA tracking).
-// FHIR R4 only. Synthetic data only.
+// Medplum FHIR client (server-side, client-credentials) + chart-writing helper.
+// Writes the structured picture Thaakat assembles as ONE transaction Bundle (the idiomatic Medplum
+// way to commit a cross-referenced graph atomically): Observations, a provisional Condition, the
+// DetectedIssue (author = radiomics Device, implicated = the cluster), a radiomics DiagnosticReport,
+// ServiceRequest, Claim(use="preauthorization") + Task, and a Provenance proving it's AI-derived
+// from the intake transcript (stored as a real Binary via DocumentReference — never base64).
+//
+// FHIR R4 only. Synthetic data only. Decision-support / navigation — never diagnosis.
 
 import { MedplumClient, createReference } from '@medplum/core';
-import type {
-  Patient,
-  Condition,
-  Observation,
-  ServiceRequest,
-  DiagnosticReport,
-  DetectedIssue,
-  Device,
-  Claim,
-  Task,
-} from '@medplum/fhirtypes';
+import type { Patient, DocumentReference, Reference } from '@medplum/fhirtypes';
+import { buildChartBundle, extractionFromChartInput } from './fhir/model';
 
 let cached: MedplumClient | null = null;
 
@@ -43,10 +38,13 @@ export type ChartInput = {
   referral?: { specialty: string; imaging?: string; cptCode?: string };
   priorAuthRequired?: boolean;
   cluster?: { name: string; ask: string; confidence: number }; // the assembled pattern -> DetectedIssue
+  transcript?: string; // raw intake transcript -> DocumentReference (Provenance source)
 };
 
+export type CommitResult = { dryRun: boolean; ids: Record<string, string>; note: string; error?: string };
+
 // Writes the whole picture as a transaction. Returns created resource ids (or a dry-run echo).
-export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean; ids: Record<string, string>; note: string }> {
+export async function commitChart(input: ChartInput): Promise<CommitResult> {
   const medplum = await getMedplum();
   if (!medplum) {
     return {
@@ -56,7 +54,7 @@ export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean;
     };
   }
 
-  // ensure a patient
+  // 1. ensure a patient (created up front so the transcript Binary can bind securityContext to it)
   let patient: Patient;
   if (input.patientId) {
     patient = await medplum.readResource('Patient', input.patientId);
@@ -66,107 +64,45 @@ export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean;
       name: [{ given: [input.patientName?.given ?? 'Jane'], family: input.patientName?.family ?? 'Doe' }],
     });
   }
-  const subject = createReference(patient);
-  const ids: Record<string, string> = { Patient: patient.id! };
+  const patientRef = createReference(patient);
+  const ids: Record<string, string> = { [`Patient:${patient.id}`]: patient.id! };
 
-  // symptoms -> Observations
-  for (const s of input.symptoms.slice(0, 12)) {
-    const obs = await medplum.createResource<Observation>({
-      resourceType: 'Observation',
-      status: 'preliminary',
-      category: [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/observation-category', code: 'survey' }] }],
-      code: { text: 'Patient-reported symptom (Thaakat voice intake)' },
-      valueString: s,
-      subject,
-    });
-    ids[`Observation:${obs.id}`] = obs.id!;
-  }
-
-  // working problem (decision-support, low certainty)
-  const condition = await medplum.createResource<Condition>({
-    resourceType: 'Condition',
-    clinicalStatus: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-clinical', code: 'active' }] },
-    verificationStatus: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-ver-status', code: 'provisional' }] },
-    code: { text: 'Suspected endometriosis — for specialist evaluation (Thaakat navigator, not a diagnosis)' },
-    subject,
-  });
-  ids['Condition'] = condition.id!;
-
-  // the assembled cross-specialty pattern -> DetectedIssue ("nobody's job was to see this")
-  // Idiomatic FHIR: author = the radiomics Device, evidence = the real resources it reasoned over.
-  if (input.cluster) {
-    const device = await medplum.createResource<Device>({
-      resourceType: 'Device',
-      status: 'active',
-      deviceName: [{ name: 'Radiomics decision-support model', type: 'model-name' }],
-    });
-    const issue = await medplum.createResource<DetectedIssue>({
-      resourceType: 'DetectedIssue',
-      status: 'preliminary',
-      severity: 'moderate',
-      code: { text: input.cluster.name },
-      detail: input.cluster.ask,
-      patient: subject,
-      author: createReference(device),
-      evidence: [{ detail: [createReference(condition)] }],
-    });
-    ids['Device'] = device.id!;
-    ids['DetectedIssue'] = issue.id!;
-  }
-
-  // radiomics report
-  if (input.imagingFindings?.length) {
-    const report = await medplum.createResource<DiagnosticReport>({
-      resourceType: 'DiagnosticReport',
-      status: 'preliminary',
-      code: { text: 'Pelvic MRI — radiomics decision-support (Thaakat)' },
-      subject,
-      conclusion: input.imagingFindings.join(' '),
-    });
-    ids['DiagnosticReport'] = report.id!;
-  }
-
-  // referral
-  if (input.referral) {
-    const sr = await medplum.createResource<ServiceRequest>({
-      resourceType: 'ServiceRequest',
-      status: 'active',
-      intent: 'order',
-      code: {
-        text: `${input.referral.imaging ?? 'Specialist referral'} — ${input.referral.specialty}`,
-        coding: input.referral.cptCode ? [{ system: 'http://www.ama-assn.org/go/cpt', code: input.referral.cptCode }] : undefined,
-      },
-      subject,
-      reasonReference: [createReference(condition)],
-    });
-    ids['ServiceRequest'] = sr.id!;
-
-    // prior auth modeled as FHIR (Stedi has no 278 API — this is the spec-correct representation)
-    if (input.priorAuthRequired) {
-      const claim = await medplum.createResource<Claim>({
-        resourceType: 'Claim',
-        status: 'active',
-        use: 'preauthorization',
-        type: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/claim-type', code: 'professional' }] },
-        patient: subject,
-        created: new Date().toISOString(),
-        priority: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/processpriority', code: 'normal' }] },
-        provider: { display: 'Thaakat (demo provider)' }, // Claim.provider is an org/practitioner ref
-        insurance: [{ sequence: 1, focal: true, coverage: { display: 'Demo coverage' } }],
+  // 2. store the transcript as a real Binary via DocumentReference (securityContext = patient).
+  //    Never base64 into Attachment.data — createDocumentReference does Binary + url + securityContext.
+  let transcriptDoc: Reference<DocumentReference> | undefined;
+  const transcript = input.transcript ?? (input.symptoms.length ? input.symptoms.join('\n') : undefined);
+  if (transcript && typeof (medplum as { createDocumentReference?: unknown }).createDocumentReference === 'function') {
+    try {
+      const doc = await medplum.createDocumentReference({
+        data: transcript,
+        contentType: 'text/plain',
+        filename: 'thaakat-intake.txt',
+        securityContext: patientRef,
+        additionalFields: {
+          status: 'current',
+          subject: patientRef,
+          type: { text: 'Thaakat voice-intake transcript' },
+        },
       });
-      ids['Claim(preauth)'] = claim.id!;
-
-      const task = await medplum.createResource<Task>({
-        resourceType: 'Task',
-        status: 'in-progress',
-        intent: 'order',
-        description: 'Prior authorization submitted for recommended imaging (Thaakat)',
-        for: subject,
-        focus: createReference(claim),
-      });
-      ids['Task(PA)'] = task.id!;
+      transcriptDoc = createReference(doc);
+      ids[`DocumentReference:${doc.id}`] = doc.id!;
+    } catch (e) {
+      console.warn('[medplum] transcript store failed (continuing):', (e as Error).message);
     }
   }
 
-  return { dryRun: false, ids, note: 'Wrote FHIR chart to Medplum.' };
+  // 3. build the clinical graph from the structured extraction and commit it atomically.
+  const extraction = extractionFromChartInput({ ...input, transcript });
+  const bundle = buildChartBundle({ patient: patientRef, extraction, transcriptDoc });
+  const result = await medplum.executeBatch(bundle);
+
+  // 4. collect the created ids from the transaction response (location: "Type/{id}/_history/1")
+  for (const entry of result.entry ?? []) {
+    const loc = entry.response?.location;
+    if (!loc) continue;
+    const [type, id] = loc.split('/');
+    if (type && id) ids[`${type}:${id}`] = id;
+  }
+
+  return { dryRun: false, ids, note: 'Wrote FHIR chart to Medplum as one transaction bundle.' };
 }
