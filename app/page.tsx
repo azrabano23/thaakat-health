@@ -449,7 +449,7 @@ export default function Home() {
 
             <div style={{ marginTop: 40 }}>
               <span className="label-sig" style={{ display: 'block', marginBottom: 16 }}>
-                Clinical backing — grounded in the guidelines, not vibes
+                Clinical backing — grounded in the guidelines
               </span>
               <div style={{ borderTop: '1.5px solid var(--text)' }}>
                 {CLINICAL_BACKING.map((c) => (
