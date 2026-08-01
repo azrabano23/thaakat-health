@@ -214,22 +214,15 @@ export function buildSettings(inputSampleRate: number) {
           keyterms: CLINICAL_KEYTERMS,
         },
       },
-      // Fallback array: try our preferred Claude first, fall back to a Deepgram-managed id that's
-      // guaranteed provisioned — so if the newer id isn't managed yet, live voice degrades instead
-      // of silently erroring on stage. (For any Claude id, a BYO think.endpoint → Anthropic works,
-      // but that would put the key in browser-sent settings, so we keep the managed provider.)
-      think: [
-        {
-          provider: { type: 'anthropic', model: 'claude-haiku-4-5', temperature: 0.4 },
-          prompt: THAAKAT_VOICE_PROMPT,
-          functions: THAAKAT_FUNCTIONS,
-        },
-        {
-          provider: { type: 'anthropic', model: 'claude-3-5-haiku-latest', temperature: 0.4 },
-          prompt: THAAKAT_VOICE_PROMPT,
-          functions: THAAKAT_FUNCTIONS,
-        },
-      ],
+      // MUST be a single object, not a fallback array: Deepgram validates every entry in a think
+      // array and rejects the whole thing if any model is unavailable ("model not available").
+      // Verified live against this account's agent socket: claude-haiku-4-5 is ACCEPTED, while
+      // claude-3-5-haiku-latest / claude-sonnet-4-20250514 are NOT — so keep claude-haiku-4-5.
+      think: {
+        provider: { type: 'anthropic', model: 'claude-haiku-4-5', temperature: 0.4 },
+        prompt: THAAKAT_VOICE_PROMPT,
+        functions: THAAKAT_FUNCTIONS,
+      },
       // Empathetic, calm clinical voice — not the energetic default — for a patient dismissed for years.
       speak: { provider: { type: 'deepgram', model: 'aura-2-harmonia-en' } },
       greeting: THAAKAT_GREETING,
