@@ -429,14 +429,14 @@ export default function Home() {
                 <span className="label-sig">◆ The imaging moat</span>
                 <span className="pill pill-signal pill-dot">Founder’s own research</span>
               </div>
-              <h3>EndoDetect: a trained radiomics model, not a mock.</h3>
+              <h3>A trained radiomics model, not a mock.</h3>
               <p style={{ maxWidth: '74ch' }}>
-                Thaakat’s moat is <strong>EndoDetect</strong> — Azra’s radiomics work turning routine MRI and
-                ultrasound into non-invasive endometriosis signal <em>before</em> surgery. A real{' '}
-                <strong>scikit-image radiomics</strong> pipeline (GLCM + first-order texture — the family PyRadiomics
-                computes) extracts real features from real, public imaging, with an honest, cross-validated result.
-                We report it as <strong>investigational decision-support</strong>, never autonomous diagnosis — the hard
-                modality other teams can’t stand up in a weekend.
+                Thaakat’s moat is Azra’s radiomics work, which turns routine MRI and ultrasound into non-invasive
+                endometriosis signal <em>before</em> surgery. A real <strong>scikit-image radiomics</strong> pipeline
+                (GLCM + first-order texture, the family PyRadiomics computes) extracts real features from real, public
+                imaging, with an honest, cross-validated result. We report it as{' '}
+                <strong>investigational decision-support</strong>, never autonomous diagnosis. It’s the hard modality
+                other teams can’t stand up in a weekend.
               </p>
             </div>
 
@@ -492,6 +492,24 @@ export default function Home() {
               lede="Voice, real-time retrieval, FHIR, and a trained imaging model — plus the lived research behind the moat."
             />
 
+            {/*
+              Both founders at Y Combinator. Sits above the cards rather than inside one, because
+              it's a group photo — splitting it into a per-founder headshot would crop out the
+              thing that makes it worth showing.
+            */}
+            <figure className="founders-photo">
+              <img
+                src="/founders/thaakat-founders-yc.jpg"
+                alt="Azra Bano and Nityanth Maramreddy with their team at the Y Combinator sign in San Francisco."
+                loading="lazy"
+                decoding="async"
+              />
+              <figcaption>
+                At Y&nbsp;Combinator, San Francisco. <strong>Azra</strong> seated at left,{' '}
+                <strong>Nitu</strong> standing at right.
+              </figcaption>
+            </figure>
+
             <div className="founders" style={{ marginTop: 40 }}>
               <FounderCard
                 name="Azra Bano"
@@ -500,16 +518,14 @@ export default function Home() {
                 bio={
                   <>
                     Repeat medtech founder (5×, <strong>~$7M raised</strong>). AI/ML researcher at Robert Wood Johnson
-                    University Hospital — radiomics and MRI/ultrasound AI for cardio-gynecologic health. She built{' '}
-                    <strong>EndoDetect</strong>: radiomics that turns routine MRI and ultrasound into non-invasive
-                    endometriosis detection before surgery. Thaakat is that proven imaging engine wrapped in a full
-                    agent. She didn’t discover this problem for a hackathon — she pitched and built a company for it.
-                    Previously SWE at Google and a quant at Goldman Sachs; 1st place NASA SpaceTech (international);
-                    quantum-ML at Columbia; Rutgers ECE + Math.
+                    University Hospital, working on radiomics and MRI/ultrasound AI for cardio-gynecologic health. Her
+                    research turns routine MRI and ultrasound into non-invasive endometriosis detection before surgery,
+                    and Thaakat wraps that imaging work in a full agent. She has been building toward this problem for
+                    years, not since Friday. Previously SWE at Google and a quant at Goldman Sachs; 1st place NASA
+                    SpaceTech (international); quantum-ML at Columbia; Rutgers ECE + Math.
                   </>
                 }
                 highlights={[
-                  'EndoDetect',
                   'Radiomics / imaging AI',
                   '5× founder · ~$7M',
                   'ex-Google SWE',
@@ -517,7 +533,7 @@ export default function Home() {
                   'NASA SpaceTech 1st',
                   'Rutgers ECE + Math',
                 ]}
-                angle="I did the radiomics research on this — I know why women wait a decade."
+                angle="I did the radiomics research on this. I know why women wait a decade."
               />
 
               <FounderCard
@@ -527,9 +543,9 @@ export default function Home() {
                 bio={
                   <>
                     Neuroscience + CS at Rutgers (pre-med → tech). <strong>4× hackathon winner</strong>. Former product
-                    intern at Star (YC S22) and former co-founder at Palura. He’s built clinical voice agents before —{' '}
+                    intern at Star (YC S22) and former co-founder at Palura. He has built clinical voice agents before:{' '}
                     <strong>Meridian</strong>, an AI phone agent for clinics, won at Daytona’s SF hackathon alongside
-                    Azra. Pre-med rigor and a builder who ships.
+                    Azra. Pre-med rigor, and he ships.
                   </>
                 }
                 highlights={[
@@ -545,13 +561,13 @@ export default function Home() {
             <div className="aside" style={{ marginTop: 34 }}>
               <span className="label-sig">Why this team</span>
               <p style={{ marginTop: 12, maxWidth: '84ch', color: 'var(--text-2)' }}>
-                Azra and Nitu met at <strong>Road to Silicon V/Alley</strong> — New Jersey’s largest entrepreneurship
-                organization — where both rose to lead it. They flew across the country to SF hackathons together and
-                won repeatedly, including healthcare voice agents (Meridian) and a Y&nbsp;Combinator
-                reinforcement-learning hackathon. They’re now in SF full-time.
+                Azra and Nitu met at <strong>Road to Silicon V/Alley</strong>, New Jersey’s largest entrepreneurship
+                organization, where both rose to lead it. They flew across the country to SF hackathons together and won
+                repeatedly, including healthcare voice agents (Meridian) and a Y&nbsp;Combinator reinforcement-learning
+                hackathon. They’re now in SF full-time.
               </p>
               <p className="founder-angle">
-                “We’ve already built healthcare voice AI together — and we win in YC’s own rooms.”
+                “We’ve already built healthcare voice AI together, and we win in YC’s own rooms.”
               </p>
             </div>
           </div>

@@ -10,15 +10,18 @@
 
 import { useRef, useState } from 'react';
 import {
+  CLUSTERS,
   DEMO_PATIENTS,
   getPatient,
   matchClusters,
+  nearMissCluster,
   mentionOf,
   type Finding,
   type ClusterMatch,
 } from '@/lib/clusters';
 import type { ContextDoc } from '@/lib/moss';
 import { RecordTimeline, ConversationPanel, Nav } from '@/components/ui';
+import { ImagingEvidence } from '@/components/ImagingEvidence';
 import LiveVoice from './LiveVoice';
 
 type Turn = { role: 'patient' | 'thaakat'; text: string };
@@ -33,6 +36,9 @@ export default function Intake() {
   const [record, setRecord] = useState<Finding[]>([]);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [match, setMatch] = useState<ClusterMatch | null>(null);
+  // The closest cluster that fell SHORT, kept only when nothing fired. Rendering it is what turns
+  // "no pattern" from a blank panel into a legible non-finding.
+  const [nearMiss, setNearMiss] = useState<ClusterMatch | null>(null);
   const [coverage, setCoverage] = useState<Coverage | null>(null);
   const [committed, setCommitted] = useState<Committed | null>(null);
   const [phase, setPhase] = useState<'idle' | 'connecting' | 'interview' | 'reading' | 'assembled'>('idle');
@@ -46,6 +52,7 @@ export default function Intake() {
     setRecord([]);
     setTurns([]);
     setMatch(null);
+    setNearMiss(null);
     setCoverage(null);
     setCommitted(null);
     setRetrieval(null);
@@ -62,7 +69,12 @@ export default function Intake() {
         liveRecord.current = next;
         return next;
       }),
-    onCluster: setMatch,
+    // When the live call assembles nothing, fall back to the same near-miss panel the scripted run
+    // uses — otherwise a live run of the negative-control patient renders a blank card.
+    onCluster: (m: ClusterMatch | null) => {
+      setMatch(m);
+      setNearMiss(m ? null : nearMissCluster(liveRecord.current));
+    },
     onCoverage: (c: Coverage) => setCoverage(c),
     onCommit: (c: unknown) => setCommitted(c as Committed),
     onRetrieval: (ms: number, backend: string) => setRetrieval({ ms, backend }),
@@ -112,8 +124,14 @@ export default function Intake() {
     say('patient', patient.reply);
     push(patient.reported);
 
+    await wait(420);
+    say(
+      'thaakat',
+      "I'm sorry you've had to keep hearing that this is normal. Pain that disrupts your life deserves to be taken seriously.",
+    );
+
     // 3) the imaging moment — re-read the under-read scan (THE MOAT), only if she has one on file.
-    let img: { summary?: string; findings?: { narration: string }[] } | null = null;
+    let img: { summary?: string; findings?: { narration: string; clinicalDetail?: string }[] } | null = null;
     if (patient.imaging) {
       setPhase('reading');
       await wait(560);
@@ -127,7 +145,16 @@ export default function Intake() {
         .catch(() => null);
       await wait(430);
       if (img?.findings?.length) {
-        for (const f of img.findings) say('thaakat', f.narration);
+        say('thaakat', "I found a couple of things I'd want an endometriosis specialist to review with you.");
+        for (const f of img.findings) {
+          await wait(450);
+          say('thaakat', f.narration);
+        }
+        await wait(300);
+        say(
+          'thaakat',
+          "This isn't a diagnosis, and I don't want to overstate what one scan can tell us. But it is enough that you deserve a careful next conversation.",
+        );
         push({
           id: 'radiomics',
           label: patient.imaging.label,
@@ -144,19 +171,30 @@ export default function Intake() {
     // 4) assemble the cluster
     const top = matchClusters(rec)[0] ?? null;
     setMatch(top);
+    setNearMiss(top ? null : nearMissCluster(rec));
     setPhase('assembled');
     await wait(430);
-    if (top) say('thaakat', top.cluster.narration);
+    // assembledLine is per-patient and required, so it is also what she says when NOTHING fires.
+    say('thaakat', patient.assembledLine);
+    if (top) {
+      await wait(320);
+      say('thaakat', `The question I’d bring to your clinician is: ${top.cluster.ask}`);
+    }
 
-    // 5) The Cost — live Stedi eligibility for the confirmatory step
-    const cov: Coverage | null = await fetch('/api/eligibility', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ patient: patient.payer, serviceTypeCodes: top?.cluster.confirmatory.serviceTypeCodes }),
-    })
-      .then((x) => x.json())
-      .catch(() => ({ error: 'unreachable' }));
-    setCoverage(cov);
+    // 5) The Cost — live Stedi eligibility for the confirmatory step.
+    // Skipped entirely when nothing fired: with no cluster there is no confirmatory service to
+    // price, and calling with `serviceTypeCodes: undefined` asked the payer about nothing.
+    let cov: Coverage | null = null;
+    if (top) {
+      cov = await fetch('/api/eligibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ patient: patient.payer, serviceTypeCodes: top.cluster.confirmatory.serviceTypeCodes }),
+      })
+        .then((x) => x.json())
+        .catch(() => ({ error: 'unreachable' }));
+      setCoverage(cov);
+    }
     const pa = cov?.priorAuthRequired === 'Y';
     if (top && cov && !cov.error) {
       say(
@@ -173,10 +211,12 @@ export default function Intake() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         symptoms: rec.filter((f) => f.specialty.startsWith('Patient')).map((f) => f.detail),
-        imagingFindings: img?.findings?.map((f) => f.narration),
+        imagingFindings: img?.findings?.map((f) => f.clinicalDetail ?? f.narration),
         referral: top
           ? {
-              specialty: 'Gyn / endometriosis specialist',
+              // Follows the cluster that fired. Hardcoding gyn here sent Dana's Sjögren's
+              // ServiceRequest to a gynecologist.
+              specialty: top.cluster.referralSpecialty,
               imaging: top.cluster.confirmatory.name,
               cptCode: top.cluster.confirmatory.cptCode,
             }
@@ -194,7 +234,7 @@ export default function Intake() {
     await wait(280);
     say(
       'thaakat',
-      "I've assembled everything your doctors documented into one brief for the specialist. You've waited long enough. Let's get you answers.",
+      "I've put the important pieces into one brief your clinician can review, with the original sources attached. You shouldn't have to tell this whole story from scratch again.",
     );
     setRunning(false);
   }
@@ -338,6 +378,26 @@ export default function Intake() {
           )}
         </section>
 
+        <section className="call-bridge" aria-label="How the patient call reaches the clinical team">
+          <div className="call-bridge-copy">
+            <span className="label-sig">◆ From patient call to clinician action</span>
+            <p>
+              The patient speaks naturally; the care team sees the transcript, chart evidence, and next-step brief in
+              one place. The live button uses Deepgram. “Play demo” is an offline-safe replay of the same retrieval,
+              imaging, coverage, and FHIR steps.
+            </p>
+          </div>
+          <div className="call-flow" aria-label="Patient to Deepgram to Thaakat to clinical console">
+            <span>Patient call</span><i>→</i><span><b>Deepgram</b><small>Nova-3 Medical · Aura</small></span><i>→</i>
+            <span><b>Thaakat</b><small>Claude + Moss</small></span><i>→</i><span>Clinical console</span>
+          </div>
+          <div className="patient-benefits">
+            <span><b>Less repetition</b> Her history is assembled before the visit.</span>
+            <span><b>More agency</b> She leaves with a clinician question, not a black-box verdict.</span>
+            <span><b>A practical next step</b> Coverage and prior-auth status travel with the brief.</span>
+          </div>
+        </section>
+
         {/* ── two-column interactive workspace ── */}
         <div className="console">
           {/* LEFT: the Dossier + the assembled pattern */}
@@ -361,6 +421,55 @@ export default function Intake() {
                 <RecordTimeline record={record} />
               )}
             </div>
+
+            {/* The engine ran and declined. Neutral styling, not the signal color — a non-finding
+                must not read as a finding. Showing WHICH cluster came closest and which required
+                findings were absent is the answer to "does it ever say no?". */}
+            {!match && phase === 'assembled' && (
+              <div className="cluster cluster-null">
+                <div className="cluster-head">
+                  <span className="label-sig">◇ No pattern meets threshold</span>
+                  <span className="hud">{CLUSTERS.length} definitions evaluated</span>
+                </div>
+
+                <h3>Nothing to flag on this record</h3>
+                <p className="cluster-narr">
+                  Every shipped cluster definition was scored against her whole assembled record. None reached its
+                  required number of corroborating findings, so Thaakat raises nothing.
+                </p>
+
+                {nearMiss && (
+                  <div className="cluster-block">
+                    <span className="lbl">Closest — and why it fell short</span>
+                    <p style={{ marginBottom: 10 }}>{nearMiss.cluster.name}</p>
+                    <ul className="tagcheck">
+                      {nearMiss.matched.map((t) => (
+                        <li key={t} className="tagcheck-hit">
+                          <span aria-hidden="true">✓</span> {t}
+                        </li>
+                      ))}
+                      {nearMiss.missing.map((t) => (
+                        <li key={t} className="tagcheck-miss">
+                          <span aria-hidden="true">✗</span> {t} <em>absent</em>
+                        </li>
+                      ))}
+                    </ul>
+                    <p style={{ marginTop: 10, color: 'var(--muted)', fontSize: 13.5 }}>
+                      {nearMiss.matched.length} of {nearMiss.cluster.requiredTags.length} · needs{' '}
+                      {nearMiss.cluster.minMatch}
+                    </p>
+                  </div>
+                )}
+
+                <div className="cluster-block">
+                  <span className="lbl">What this does not mean</span>
+                  <p style={{ color: 'var(--text-2)', fontSize: 14 }}>
+                    Not a clean bill of health, and not a claim of specificity — only that nothing on this record
+                    matches a pattern Thaakat ships. No DetectedIssue is written and no referral is raised.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {match && (
               <div className="cluster">
@@ -449,27 +558,21 @@ export default function Intake() {
           </div>
         </div>
 
-        {/* ── provenance strip: every sponsor doing real work in one run ── */}
-        <div className="console-foot">
-          <span className="foot-sponsor">
-            <b>Deepgram</b> voice
-          </span>
-          <span className="foot-sponsor">
-            <b>Claude</b> reasoning
-          </span>
-          <span className="foot-sponsor">
-            <b>Moss</b> &lt;10 ms retrieval
-          </span>
-          <span className="foot-sponsor">
-            <b>Medplum</b> FHIR system-of-record
-          </span>
-          <span className="foot-sponsor">
-            <b>Stedi</b> eligibility
-          </span>
-          <span className="foot-sponsor" style={{ marginLeft: 'auto', color: 'var(--faint)' }}>
-            Synthetic data · decision-support, not diagnosis
-          </span>
-        </div>
+        <ImagingEvidence reading={phase === 'reading'} />
+
+        <section className="sponsor-proof" aria-labelledby="sponsor-proof-title">
+          <div className="sponsor-proof-head">
+            <span className="label-sig">◆ Every sponsor is in the clinical loop</span>
+            <p id="sponsor-proof-title">Each call produces something useful for the patient and something reviewable for the care team.</p>
+          </div>
+          <div className="sponsor-grid">
+            <div><b>Deepgram</b><span>Patient speaks naturally</span><p>Nova-3 Medical handles clinical vocabulary; Aura speaks back. The clinician console receives the live transcript and extracted symptoms.</p></div>
+            <div><b>Moss</b><span>Finds the missing context</span><p>Retrieves the relevant notes and labs during the turn, so Thaakat can ask a chart-aware question without making the patient repeat years of history.</p></div>
+            <div><b>Medplum</b><span>Makes it reviewable</span><p>Writes the sourced `DetectedIssue`, voice observations, imaging report, referral, and authorization task into FHIR for a clinician to verify.</p></div>
+            <div><b>Stedi</b><span>Makes the plan actionable</span><p>Checks eligibility and estimated cost for the suggested next step, rather than leaving the patient with an unaffordable or unknowable recommendation.</p></div>
+          </div>
+          <p className="sponsor-note">Claude is the conversation and orchestration layer. Synthetic chart data only; research images are separately attributed; decision-support, never diagnosis.</p>
+        </section>
       </main>
     </div>
   );

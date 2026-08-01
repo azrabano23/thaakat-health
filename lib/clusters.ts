@@ -1,10 +1,19 @@
 // The cluster engine — the "generalizable, not hardcoded" proof for judges.
 // A cluster = a set of documented findings that TOGETHER suggest a condition nobody assembled.
-// We ship THREE definitions (endometriosis + Sjögren's + celiac) and TWO seeded patients, so the
+// We ship THREE definitions (endometriosis + Sjögren's + celiac) and FOUR seeded patients, so the
 // same engine can be shown firing a different cluster live rather than just pointed at in config.
 // Matching is transparent: collect the tags present in the assembled record, count how many a
 // cluster needs. Decision-support only: a cluster surfaces documented findings + a QUESTION for a
 // clinician. Synthetic data only.
+//
+// The four patients each prove a different thing about the engine:
+//   maria — endometriosis, the main run (the only one with an under-read scan to re-read)
+//   dana  — Sjögren's, pure record assembly: "does this only work for endo?"
+//   priya — celiac, so all three shipped definitions actually fire rather than two of three
+//   grace — NEGATIVE CONTROL: a real scattered record where nothing meets threshold.
+//           Without her, every patient we show lights up and "it always finds something" is
+//           unanswerable. She is a negative control against the patterns we ship — not a
+//           specificity claim, and it should not be described as one.
 
 export type Finding = {
   id: string;
@@ -30,10 +39,17 @@ export type Cluster = {
   minMatch: number;
   narration: string; // what lights up on screen
   ask: string; // the question for the clinician (NEVER a diagnosis to the patient)
+  // Who the generated ServiceRequest is addressed to. Lives on the cluster, not the patient:
+  // the referral follows the pattern that fired, not the person. Previously hardcoded to
+  // "Gyn / endometriosis specialist" at both call sites, which sent Dana's ServiceRequest to a
+  // gynecologist for a Sjögren's workup.
+  referralSpecialty: string;
   confirmatory: { name: string; cptCode?: string; serviceTypeCodes?: string[] };
 };
 
-export type ClusterMatch = { cluster: Cluster; matched: string[]; confidence: number };
+// `missing` is requiredTags minus matched — needed to render WHY a cluster fell short, which is
+// the whole point of the negative-control patient.
+export type ClusterMatch = { cluster: Cluster; matched: string[]; missing: string[]; confidence: number };
 
 // Charted clinical data for the patient banner (the EHR-style header a clinician reads first).
 // flag drives the color: 'high'/'low' = out of range, the thing a rushed eye skims past.
@@ -72,6 +88,10 @@ export type DemoPatient = {
   question: string; // the follow-up Thaakat appends after citing what retrieval returned
   reply: string; // her spoken answer
   reported: Finding; // what that answer adds to the timeline
+  // What Thaakat says once the record is assembled — including when NOTHING fires, which is why
+  // this is required rather than optional. It replaced a `patient.id === 'maria' ? ... : ...`
+  // ternary in app/intake/page.tsx that told every non-Maria patient to see a rheumatologist.
+  assembledLine: string;
   // present only when this patient has an under-read scan to re-read (the imaging moat)
   imaging?: {
     studyId: string;
@@ -130,6 +150,8 @@ const MARIA: DemoPatient = {
   retrievalQuery: 'cyclical pelvic pain elevated CA-125 never followed up unremarkable pelvic ultrasound',
   question: 'When is the pain at its worst — and does it ever hurt during sex?',
   reply: "It's worst right before my period. And yeah… it really hurts during sex. Five doctors told me it was normal.",
+  assembledLine:
+    'When I put your history together — the timing of the pain, the bowel symptoms, the lab that wasn’t followed up, and this scan — I see a pattern that is worth bringing to a specialist.',
   record: [
     {
       id: 'gp-2022',
@@ -248,6 +270,8 @@ const DANA: DemoPatient = {
   question: 'How much water are you getting through in a day — and can you still cry?',
   reply:
     "I drink almost four liters. And no — when my father died last year I couldn't produce tears. Everyone treated a different piece of it.",
+  assembledLine:
+    'When I put these notes together, I see a pattern worth taking to a rheumatologist rather than treating each symptom separately.',
   record: [
     {
       id: 'oph-2021',
@@ -303,7 +327,216 @@ const DANA: DemoPatient = {
   },
 };
 
-export const DEMO_PATIENTS: DemoPatient[] = [MARIA, DANA];
+// ── Patient 3: "Priya" — the celiac case (so all three shipped definitions actually fire) ──
+// Same shape as Dana: no under-read scan, pure record assembly. The recurring signal across all
+// three positive patients is the ORPHANED LAB — Maria's CA-125, Dana's ANA, Priya's tTG-IgA.
+const PRIYA: DemoPatient = {
+  id: 'priya',
+  name: { given: 'Priya', family: 'Nair' },
+  headline: 'Celiac pattern · 3 clinicians, 3 years',
+  payer: 'aetna',
+  demographics: { age: 29, sex: 'Female', mrn: 'MRN 47-215-66' },
+  chart: {
+    chiefComplaint:
+      'Three years of bloating and loose stools called IBS, iron that will not stay up, and fatigue — each managed separately.',
+    symptoms: [
+      'Bloating and loose stools most days',
+      'Cramping 1–2 hours after eating',
+      'Fatigue despite full nights of sleep',
+      'Mouth ulcers that keep recurring',
+      'Weight drifting down without trying',
+    ],
+    pmh: ['Provisional IBS (2022)', 'Iron-deficiency anemia — recurrent', 'Recurrent aphthous ulcers'],
+    psh: ['None'],
+    meds: ['Ferrous sulfate 325 mg daily — third course', 'Peppermint oil capsules', 'Loperamide PRN'],
+    allergies: ['NKDA'],
+    family: ['Maternal aunt — celiac disease', 'Mother — hypothyroidism'],
+    social: 'Non-smoker; rarely drinks; software QA engineer',
+    pathology:
+      'No duodenal biopsy performed — the endoscopic confirmation that follows a positive serology was never arranged.',
+  },
+  vitals: [
+    { label: 'BP', value: '108/68', unit: 'mmHg', flag: 'normal' },
+    { label: 'HR', value: '88', unit: 'bpm', flag: 'normal' },
+    { label: 'Temp', value: '98.2', unit: '°F', flag: 'normal' },
+    { label: 'BMI', value: '19.1', flag: 'low' },
+  ],
+  labs: [
+    { label: 'tTG-IgA', value: '84 U/mL', ref: '< 15 U/mL', flag: 'high', orphaned: true },
+    { label: 'Hemoglobin', value: '10.4 g/dL', ref: '12.0–15.5', flag: 'low' },
+    { label: 'Ferritin', value: '7 ng/mL', ref: '15–150', flag: 'low' },
+    { label: 'Vitamin D, 25-OH', value: '17 ng/mL', ref: '30–100', flag: 'low' },
+    { label: 'TSH', value: '2.1 mIU/L', ref: '0.4–4.0', flag: 'normal' },
+  ],
+  retrievalQuery: 'chronic bloating loose stools IBS iron deficiency fatigue positive tTG never followed up',
+  question: 'Do the symptoms track with anything you eat — and has anyone repeated that coeliac blood test?',
+  reply:
+    "Bread and pasta days are the worst, but nobody ever connected it. And no — I didn't even know I'd had a coeliac test.",
+  record: [
+    {
+      id: 'gi-2022-priya',
+      label: 'Chronic bloating + loose stools → "IBS"',
+      detail: 'Bloating, cramping and loose stools most days for over a year. Assessed as IBS; advised low-FODMAP trial.',
+      mention: 'a GI note from 2022 where daily bloating and loose stools were put down to IBS',
+      specialty: 'Gastroenterology',
+      date: '2022-05',
+      source: 'GI consult note',
+      tags: ['gi-chronic', 'dismissed'],
+    },
+    {
+      id: 'heme-2023-priya',
+      label: 'Iron-deficiency anemia — supplements only',
+      detail: 'Hb 10.4, ferritin 7. Third course of oral iron started. No investigation of cause documented.',
+      mention: 'a haematology note from 2023 where recurrent iron deficiency was treated with supplements and never investigated',
+      specialty: 'Hematology',
+      date: '2023-02',
+      source: 'Hematology clinic note',
+      tags: ['iron-deficiency', 'dismissed'],
+    },
+    {
+      id: 'gp-2024-priya',
+      label: 'Fatigue — "labs unremarkable"',
+      detail: 'Persistent fatigue. TSH and CBC reviewed as unremarkable. Advised on sleep and stress.',
+      mention: 'a primary-care note from 2024 about persistent fatigue where the labs were called unremarkable',
+      specialty: 'Primary Care',
+      date: '2024-03',
+      source: 'Office visit note',
+      tags: ['fatigue', 'dismissed'],
+    },
+    {
+      id: 'ttg-2024-priya',
+      label: 'tTG-IgA 84 U/mL — no follow-up',
+      detail: 'Tissue transglutaminase IgA 84 U/mL (ref <15). No endoscopy, dietetics referral, or repeat documented.',
+      mention: 'a coeliac blood test from 2024 that came back strongly positive and was never acted on',
+      specialty: 'Laboratory',
+      date: '2024-08',
+      source: 'Lab result',
+      tags: ['ttg-positive'],
+      orphaned: true,
+    },
+  ],
+  reported: {
+    id: 'pt-today-priya',
+    label: 'Symptoms track with gluten + weight loss (today)',
+    detail:
+      'Patient-reported: symptoms consistently worse on bread and pasta days; unintentional weight drift; recurrent mouth ulcers.',
+    mention: 'symptoms that track with bread and pasta, and weight drifting down',
+    specialty: 'Patient (today)',
+    date: '2025-08',
+    source: 'Thaakat voice intake',
+    tags: ['gi-chronic', 'severity'],
+  },
+  assembledLine:
+    'When I put these notes together — the gut symptoms, the iron that will not stay up, and a coeliac test that came back positive and was never acted on — I see a pattern worth one conversation rather than another year of managing the pieces.',
+};
+
+// ── Patient 4: "Grace" — the NEGATIVE CONTROL (nothing fires) ──
+// A genuinely benign record that still LOOKS like the others at a glance: four specialists, real
+// symptoms, an out-of-range lab. The difference is that her abnormal lab was acted on and her
+// findings do not corroborate each other. Closest cluster is celiac at 2 of 4 — one short of its
+// minMatch of 3 — which is what the no-match panel renders.
+//
+// She has no `imaging` and her `reported` turn adds nothing that crosses a threshold. That is the
+// point: the engine has to be able to return nothing, out loud, on a record that invites a guess.
+const GRACE: DemoPatient = {
+  id: 'grace',
+  name: { given: 'Grace', family: 'Whitfield' },
+  headline: 'No pattern meets threshold · negative control',
+  payer: 'uhc',
+  demographics: { age: 38, sex: 'Female', mrn: 'MRN 58-330-12' },
+  chart: {
+    chiefComplaint:
+      'Tiredness since a documented influenza infection, on a background of separately-resolved orthopedic and headache complaints.',
+    symptoms: [
+      'Tiredness, gradually improving since February',
+      'Occasional band-like headache at end of day',
+      'Heel pain — resolved with physiotherapy',
+      'Heavier periods, manageable',
+    ],
+    pmh: ['Influenza A (Feb 2024, PCR-confirmed)', 'Tension-type headache', 'Plantar fasciitis — resolved'],
+    psh: ['Wisdom teeth extraction (age 22)'],
+    meds: ['Ferrous sulfate 325 mg daily — started Mar 2024', 'Paracetamol PRN'],
+    allergies: ['NKDA'],
+    family: ['Father — hypertension'],
+    social: 'Non-smoker; rotating night shifts (ICU nurse); two children under five',
+    pathology: 'No tissue diagnosis indicated — no finding on this record reaches a threshold that would call for one.',
+  },
+  vitals: [
+    { label: 'BP', value: '114/72', unit: 'mmHg', flag: 'normal' },
+    { label: 'HR', value: '70', unit: 'bpm', flag: 'normal' },
+    { label: 'Temp', value: '98.5', unit: '°F', flag: 'normal' },
+    { label: 'BMI', value: '24.1', flag: 'normal' },
+  ],
+  labs: [
+    // Out of range, but NOT orphaned — iron was started and the recheck is documented. This is the
+    // contrast with Maria's CA-125, Dana's ANA and Priya's tTG: somebody did their job.
+    { label: 'Ferritin', value: '14 ng/mL', ref: '15–150', flag: 'low' },
+    { label: 'Hemoglobin', value: '12.4 g/dL', ref: '12.0–15.5', flag: 'normal' },
+    { label: 'TSH', value: '1.8 mIU/L', ref: '0.4–4.0', flag: 'normal' },
+    { label: 'CRP', value: '2.2 mg/L', ref: '< 5.0', flag: 'normal' },
+    { label: 'ANA', value: 'Negative', ref: '< 1:40', flag: 'normal' },
+  ],
+  retrievalQuery: 'fatigue after influenza low ferritin iron started resolved heel pain tension headache',
+  question: 'How has the tiredness changed since you started the iron — and is anything else new?',
+  reply:
+    "Honestly it's better. I'm back to running. It's mostly the night shifts and two kids under five at this point.",
+  record: [
+    {
+      id: 'ortho-2023-grace',
+      label: 'Plantar fasciitis — resolved',
+      detail: 'Right heel pain on first steps. Physiotherapy and orthotic. Resolved at 3-month follow-up.',
+      mention: 'an orthopedic note from 2023 about heel pain that resolved with physiotherapy',
+      specialty: 'Orthopedics',
+      date: '2023-04',
+      source: 'Orthopedic clinic note',
+      tags: ['msk-resolved'],
+    },
+    {
+      id: 'flu-2024-grace',
+      label: 'Influenza A, then post-viral fatigue',
+      detail: 'PCR-confirmed influenza A. Fatigue persisting several weeks after, expected to settle. Follow-up documented.',
+      mention: 'a documented influenza infection in early 2024 with the fatigue that followed it',
+      specialty: 'Primary Care',
+      date: '2024-02',
+      source: 'Office visit note',
+      tags: ['fatigue', 'post-viral'],
+    },
+    {
+      id: 'iron-2024-grace',
+      label: 'Low ferritin — treated and rechecked',
+      detail: 'Ferritin 14. Oral iron started, dietary advice given, recheck at 3 months showed a rising trend.',
+      mention: 'a low ferritin from 2024 that was treated with iron and rechecked',
+      specialty: 'Primary Care',
+      date: '2024-03',
+      source: 'Lab result + follow-up note',
+      tags: ['iron-deficiency'],
+    },
+    {
+      id: 'neuro-2024-grace',
+      label: 'Headache workup — tension-type',
+      detail: 'End-of-day band-like headache. Neurologic exam normal, imaging not indicated. Assessed as tension-type.',
+      mention: 'a neurology assessment from 2024 that concluded tension-type headache with a normal exam',
+      specialty: 'Neurology',
+      date: '2024-09',
+      source: 'Neurology consult note',
+      tags: ['headache'],
+    },
+  ],
+  reported: {
+    id: 'pt-today-grace',
+    label: 'Fatigue improving on iron; shift work (today)',
+    detail: 'Patient-reported: fatigue improving since iron started, back to exercising. Rotating night shifts and young children.',
+    mention: 'fatigue that has been improving since starting iron',
+    specialty: 'Patient (today)',
+    date: '2025-08',
+    source: 'Thaakat voice intake',
+    tags: ['fatigue'],
+  },
+  assembledLine:
+    'I went through your whole record — every note, every lab. I don’t see a pattern that meets the bar for me to flag anything, and your low iron was already picked up and treated. That’s information too, and I’d rather tell you that than invent something.',
+};
+
+export const DEMO_PATIENTS: DemoPatient[] = [MARIA, DANA, PRIYA, GRACE];
 
 export function getPatient(id: string): DemoPatient {
   return DEMO_PATIENTS.find((p) => p.id === id) ?? MARIA;
@@ -328,6 +561,7 @@ export const CLUSTERS: Cluster[] = [
     narration:
       'Cyclical pelvic pain, cyclical GI symptoms, an unfollowed CA-125, and imaging signs of deep infiltrating endometriosis — a pattern spread across five clinicians over three years that nobody assembled.',
     ask: 'Worth discussing an endometriosis-protocol pelvic MRI and a referral to a gyn/endometriosis specialist (with diagnostic laparoscopy on the table).',
+    referralSpecialty: 'Gyn / endometriosis specialist',
     confirmatory: { name: 'Endometriosis-protocol pelvic MRI', cptCode: '72197', serviceTypeCodes: ['30'] },
   },
   {
@@ -338,6 +572,7 @@ export const CLUSTERS: Cluster[] = [
     narration:
       "Dry eyes, dry mouth, fatigue, and a positive ANA documented across ophthalmology, dentistry, and primary care — the textbook Sjögren's cluster that gets treated as three unrelated problems.",
     ask: 'Worth discussing an SSA/SSB (anti-Ro/La) antibody panel and a rheumatology referral.',
+    referralSpecialty: 'Rheumatology',
     confirmatory: { name: 'SSA/SSB (anti-Ro/La) antibody panel', cptCode: '86235', serviceTypeCodes: ['30'] },
   },
   {
@@ -348,24 +583,39 @@ export const CLUSTERS: Cluster[] = [
     narration:
       'Chronic GI symptoms, iron-deficiency anemia, and fatigue documented separately — a celiac pattern that commonly goes years without the connecting test.',
     ask: 'Worth discussing a tissue transglutaminase (tTG-IgA) panel while still on a gluten-containing diet.',
+    referralSpecialty: 'Gastroenterology',
     confirmatory: { name: 'tTG-IgA celiac panel', cptCode: '83516', serviceTypeCodes: ['30'] },
   },
 ];
 
 // Transparent matcher: how many of a cluster's required tags are present in the assembled record?
-// minMatch is a floor, not first-match-wins — every cluster is evaluated against every record,
-// which is what keeps the other two quiet when one patient's pattern fires.
+// EVERY cluster is scored against EVERY record — nothing is filtered here — which is what lets the
+// no-match path show what was checked and missed rather than rendering a blank panel.
 //
 // Ranking is by NUMBER of matched findings, with confidence only as a tiebreak. Ranking by
 // confidence alone penalises the broader cluster: 4-of-6 endometriosis findings (0.67) would lose
 // to 3-of-4 celiac findings (0.75), so a patient matching both gets narrated the thinner pattern.
 // Callers take [0] as "the pattern", so more corroborating findings has to win.
-export function matchClusters(record: Finding[]): ClusterMatch[] {
+export function scoreClusters(record: Finding[]): ClusterMatch[] {
   const present = new Set(record.flatMap((f) => f.tags));
   return CLUSTERS.map((cluster) => {
     const matched = cluster.requiredTags.filter((t) => present.has(t));
-    return { cluster, matched, confidence: matched.length / cluster.requiredTags.length };
-  })
-    .filter((m) => m.matched.length >= m.cluster.minMatch)
-    .sort((a, b) => b.matched.length - a.matched.length || b.confidence - a.confidence);
+    const missing = cluster.requiredTags.filter((t) => !present.has(t));
+    return { cluster, matched, missing, confidence: matched.length / cluster.requiredTags.length };
+  }).sort((a, b) => b.matched.length - a.matched.length || b.confidence - a.confidence);
+}
+
+// The clusters that clear their own minMatch floor. minMatch is a floor, not first-match-wins,
+// which is what keeps the other two quiet when one patient's pattern fires.
+export function matchClusters(record: Finding[]): ClusterMatch[] {
+  return scoreClusters(record).filter((m) => m.matched.length >= m.cluster.minMatch);
+}
+
+// The highest-scoring cluster that did NOT clear its floor. Drives the negative-control panel:
+// "closest was celiac at 2 of 4, needs 3" is a legible non-finding; a blank screen is not.
+// Returns null only for a record with no findings at all, where every cluster ties at zero and
+// there is nothing worth naming as "closest".
+export function nearMissCluster(record: Finding[]): ClusterMatch | null {
+  const miss = scoreClusters(record).find((m) => m.matched.length < m.cluster.minMatch);
+  return miss && miss.matched.length > 0 ? miss : null;
 }

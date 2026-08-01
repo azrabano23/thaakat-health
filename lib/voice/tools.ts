@@ -31,7 +31,7 @@ export type ToolEvents = {
 export type ImagingResponse = {
   summary?: string;
   available?: boolean;
-  findings?: { label: string; narration: string; confidence?: number }[];
+  findings?: { label: string; narration: string; clinicalDetail?: string; confidence?: number }[];
 };
 
 export type CoverageResponse = {
@@ -250,10 +250,11 @@ export class ThaakatToolRunner {
     const top = this.cluster;
     const committed = await postJson<unknown>('/api/medplum/commit', {
       symptoms: this.record.filter((f) => f.specialty.startsWith('Patient')).map((f) => f.detail),
-      imagingFindings: this.imaging?.findings?.map((f) => f.narration),
+      imagingFindings: this.imaging?.findings?.map((f) => f.clinicalDetail ?? f.narration),
       referral: top
         ? {
-            specialty: 'Gyn / endometriosis specialist',
+            // Follows the cluster that fired, not the person — see Cluster.referralSpecialty.
+            specialty: top.cluster.referralSpecialty,
             imaging: top.cluster.confirmatory.name,
             cptCode: top.cluster.confirmatory.cptCode,
           }
