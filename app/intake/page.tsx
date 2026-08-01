@@ -53,6 +53,7 @@ export default function Intake() {
   const [committed, setCommitted] = useState<Committed | null>(null);
   const [phase, setPhase] = useState<'idle' | 'connecting' | 'interview' | 'reading' | 'assembled'>('idle');
   const [retrieval, setRetrieval] = useState<Retrieval | null>(null);
+  const [voiceLatency, setVoiceLatency] = useState<{ total?: number } | null>(null); // Deepgram's own timing
   const [running, setRunning] = useState(false);
 
   const patient = getPatient(patientId);
@@ -66,6 +67,7 @@ export default function Intake() {
     setCoverage(null);
     setCommitted(null);
     setRetrieval(null);
+    setVoiceLatency(null);
     setPhase('idle');
   }
 
@@ -88,6 +90,7 @@ export default function Intake() {
     onCoverage: (c: Coverage) => setCoverage(c),
     onCommit: (c: unknown) => setCommitted(c as Committed),
     onRetrieval: (ms: number, backend: string) => setRetrieval({ ms, backend }),
+    onLatency: (r: { total?: number }) => setVoiceLatency(r),
     onPhase: (p: 'interview' | 'reading' | 'assembled') => setPhase(p),
   };
 
@@ -563,6 +566,11 @@ export default function Intake() {
             <div className="panel-h">
               <span className="label-sig">◆ Conversation</span>
               {phase === 'reading' && <span className="hud">re-reading the scan…</span>}
+              {voiceLatency?.total != null && (
+                <span className="hud" title="Deepgram's measured voice→Claude→speech round-trip">
+                  voice→speech <b>{Math.round(voiceLatency.total * 1000)}ms</b>
+                </span>
+              )}
             </div>
             {turns.length === 0 ? (
               <p className="empty-ed">

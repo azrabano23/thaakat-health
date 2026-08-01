@@ -66,6 +66,7 @@ export default function LiveVoice({
         onCoverage: (c) => h.onCoverage?.(c),
         onCommit: (c) => h.onCommit?.(c),
         onRetrieval: (ms, b) => h.onRetrieval?.(ms, b),
+        onLatency: (r) => h.onLatency?.(r),
         onPhase: (p) => h.onPhase?.(p),
       },
       patientId,

@@ -13,11 +13,15 @@ import { ThaakatToolRunner, type ToolEvents } from './tools';
 
 export type VoiceStatus = 'idle' | 'connecting' | 'listening' | 'thinking' | 'speaking' | 'error';
 
+export type VoiceLatency = { total?: number; stt?: number; tool?: number; tts?: number };
+
 export type VoiceEvents = ToolEvents & {
   onStatus?: (s: VoiceStatus) => void;
   onTurn?: (role: 'patient' | 'thaakat', text: string) => void;
   onToolCall?: (name: string) => void;
   onError?: (message: string) => void;
+  // Deepgram's own per-stage timings (voice→Claude→tool→speech), when the agent reports them.
+  onLatency?: (report: VoiceLatency) => void;
 };
 
 type DeepgramEvent = {
@@ -27,6 +31,11 @@ type DeepgramEvent = {
   description?: string;
   message?: string;
   functions?: { id: string; name: string; arguments: string; client_side?: boolean }[];
+  // LatencyReport fields (seconds)
+  total_latency?: number;
+  stt_latency?: number;
+  ttt_tool_latency?: number;
+  tts_latency?: number;
 };
 
 export class ThaakatVoiceClient {
@@ -160,6 +169,16 @@ export class ThaakatVoiceClient {
 
       case 'FunctionCallRequest':
         void this.handleFunctionCalls(msg);
+        break;
+
+      case 'LatencyReport':
+        // Deepgram's measured end-to-end timing for the turn — surface it next to Moss's 8 ms.
+        this.events.onLatency?.({
+          total: msg.total_latency,
+          stt: msg.stt_latency,
+          tool: msg.ttt_tool_latency,
+          tts: msg.tts_latency,
+        });
         break;
 
       case 'Error':
