@@ -143,7 +143,18 @@ export default function Intake() {
       "I'm sorry you've had to keep hearing that this is normal. Pain that disrupts your life deserves to be taken seriously.",
     );
 
-    // 3) the imaging moment — re-read the under-read scan (THE MOAT), only if she has one on file.
+    // 2.5) TRIAGE & ROUTE — the headline: route her to the RIGHT specialty, before any scan.
+    const triageTop = matchClusters(rec)[0] ?? null;
+    if (triageTop) {
+      setPhase('interview');
+      await wait(520);
+      say(
+        'thaakat',
+        "From everything you've told me, this looks like a pattern an OB/GYN — an endometriosis specialist — should see, not the GI or urology clinics you keep getting sent to. That misrouting is exactly why this takes women years. Let me get you to the right place, with your whole record in hand.",
+      );
+    }
+
+    // 3) the conditional re-read — only when a scan is actually relevant to the routing.
     let img: { summary?: string; findings?: { narration: string; clinicalDetail?: string }[] } | null = null;
     if (patient.imaging) {
       setPhase('reading');
