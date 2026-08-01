@@ -760,6 +760,65 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
 .foot-sponsor { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.06em; color: var(--muted); }
 .foot-sponsor b { color: var(--text); font-weight: 600; }
 
+/* patient call → clinical console: makes the live sponsor hand-off legible in the demo */
+.call-bridge { margin-top: 22px; border-top: 1.5px solid var(--text); border-bottom: 1px solid var(--border); padding: 18px 0; display: grid; gap: 16px; }
+@media (min-width: 940px) { .call-bridge { grid-template-columns: 1.1fr 1.35fr; } .patient-benefits { grid-column: 1 / -1; } }
+.call-bridge-copy p { margin: 7px 0 0; max-width: 58ch; color: var(--text-2); font-size: 13.5px; line-height: 1.55; }
+.call-flow { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-family: var(--font-mono); font-size: 10px; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.call-flow span { min-height: 43px; flex: 1; min-width: 95px; display: grid; place-content: center; padding: 6px 10px; text-align: center; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--panel); }
+.call-flow span b { color: var(--signal); font-weight: 600; }
+.call-flow small { margin-top: 3px; color: var(--faint); font-size: 8.5px; letter-spacing: .03em; text-transform: none; }
+.call-flow i { font-style: normal; color: var(--signal); font-size: 16px; }
+.patient-benefits { display: grid; gap: 10px; border-top: 1px solid var(--border-soft); padding-top: 14px; }
+@media (min-width: 680px) { .patient-benefits { grid-template-columns: repeat(3, 1fr); } }
+.patient-benefits span { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.patient-benefits b { display: block; color: var(--text); font-size: 13px; margin-bottom: 2px; }
+
+/* real, separately attributed research images and model-validation context */
+.imaging-evidence { margin-top: 28px; padding: clamp(20px, 3vw, 32px); border: 1px solid var(--border); border-top: 2px solid var(--text); border-radius: var(--r-md); background: var(--panel); }
+.imaging-evidence-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.imaging-evidence h2 { margin: 8px 0 0; font-family: var(--font-display); font-weight: 500; font-size: clamp(1.25rem, 2.1vw, 1.65rem); letter-spacing: -.01em; }
+.imaging-state { font-family: var(--font-mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--border); border-radius: var(--r-pill); padding: 5px 9px; }
+.imaging-state.is-reading { color: var(--signal); border-color: var(--signal); animation: flagpulse 1.4s var(--ease) infinite; }
+.imaging-intro { max-width: 82ch; color: var(--muted); font-size: 13.5px; line-height: 1.55; margin: 14px 0 20px; }
+.research-images { display: grid; gap: 18px; }
+@media (min-width: 760px) { .research-images { grid-template-columns: 1fr 1fr; } }
+.research-figure { margin: 0; border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden; background: var(--bg); }
+.research-image { position: relative; overflow: hidden; background: #111; aspect-ratio: 16 / 9; }
+.research-image > img:first-child { display: block; width: 100%; height: 100%; object-fit: contain; }
+.mri-image { background: #fff; }
+.mri-image > img { object-fit: cover !important; }
+.glenda-image .mask { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; mix-blend-mode: screen; opacity: .82; }
+.mask-label { position: absolute; left: 10px; bottom: 10px; color: #f4f533; background: rgba(0,0,0,.7); border-radius: 3px; padding: 4px 6px; font-family: var(--font-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
+.research-figure figcaption { display: grid; gap: 5px; padding: 12px 13px; border-top: 1px solid var(--border); }
+.research-figure figcaption b { font-family: var(--font-display); font-size: 15px; font-weight: 500; color: var(--text); }
+.research-figure figcaption span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+.research-cohorts { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin: 18px 0; }
+.research-cohorts span { padding: 11px 14px 11px 0; color: var(--muted); font-size: 11px; line-height: 1.35; border-right: 1px solid var(--border); }
+.research-cohorts span + span { padding-left: 14px; }
+.research-cohorts span:last-child { border-right: 0; }
+.research-cohorts b { display: block; font-family: var(--font-display); font-size: 20px; font-weight: 500; color: var(--text); }
+.research-cohorts small { color: var(--faint); font-family: var(--font-mono); font-size: 9px; letter-spacing: .03em; }
+@media (max-width: 580px) { .research-cohorts { grid-template-columns: 1fr; } .research-cohorts span, .research-cohorts span + span { padding: 10px 0; border-right: 0; border-bottom: 1px solid var(--border-soft); } .research-cohorts span:last-child { border-bottom: 0; } }
+.model-explainer { display: grid; gap: 16px; margin-top: 20px; padding: 17px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+@media (min-width: 760px) { .model-explainer { grid-template-columns: 1fr 1fr; gap: 28px; } }
+.model-explainer p { margin: 8px 0 0; color: var(--text-2); font-size: 13px; line-height: 1.55; }
+.model-explainer b { color: var(--text); }
+.research-credit { margin: 20px 0 0; color: var(--faint); font-family: var(--font-mono); font-size: 10px; line-height: 1.5; }
+
+/* sponsor proof, expanded beyond a logo strip so the demo explains why each call exists */
+.sponsor-proof { margin-top: 28px; padding-top: 18px; border-top: 1.5px solid var(--text); }
+.sponsor-proof-head { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+.sponsor-proof-head p { margin: 0; color: var(--muted); font-size: 12.5px; }
+.sponsor-grid { display: grid; margin-top: 14px; border-top: 1px solid var(--border); }
+@media (min-width: 820px) { .sponsor-grid { grid-template-columns: repeat(4, 1fr); } }
+.sponsor-grid > div { padding: 16px 16px 16px 0; border-bottom: 1px solid var(--border); }
+@media (min-width: 820px) { .sponsor-grid > div { padding: 16px; border-right: 1px solid var(--border); border-bottom: 0; } .sponsor-grid > div:first-child { padding-left: 0; } .sponsor-grid > div:last-child { padding-right: 0; border-right: 0; } }
+.sponsor-grid b { display: block; font-family: var(--font-display); font-size: 17px; font-weight: 500; color: var(--text); }
+.sponsor-grid span { display: block; margin-top: 4px; color: var(--signal); font-family: var(--font-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; }
+.sponsor-grid p { margin: 9px 0 0; color: var(--muted); font-size: 12px; line-height: 1.48; }
+.sponsor-note { margin: 12px 0 0; color: var(--faint); font-family: var(--font-mono); font-size: 10px; line-height: 1.5; }
+
 /* ============================================================================
    Motion — restrained (scan-line, contour draw, rule reveal)
    ========================================================================== */

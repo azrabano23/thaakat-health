@@ -5,7 +5,10 @@
 
 export type ImagingFinding = {
   label: string;
-  narration: string; // what Thaakat says out loud
+  /** Plain-language wording for the patient conversation. */
+  narration: string;
+  /** Technical detail retained for the clinician-facing FHIR report. */
+  clinicalDetail?: string;
   // normalized bounding box on the displayed image, for the overlay [x, y, w, h] in 0..1
   region?: [number, number, number, number];
   confidence?: number; // 0..1 (demo)
@@ -40,7 +43,9 @@ const SAMPLE_STUDIES: Record<string, ImagingResult> = {
       {
         label: 'Left uterosacral ligament — DIE nodule',
         narration:
-          "On the re-read I'm seeing asymmetric, spiculated T2-hypointense thickening of the left uterosacral ligament — about 11 millimeters, with small T1-bright foci. That's a sign consistent with deep infiltrating endometriosis, and the original report called this study normal.",
+          "I found an area on the left side of the pelvis that deserves a closer look. It wasn't called out in the original report, and it has features a specialist would want to review for endometriosis.",
+        clinicalDetail:
+          'Asymmetric, spiculated T2-hypointense thickening of the left uterosacral ligament, approximately 11 mm, with small T1-bright foci; features consistent with deep infiltrating endometriosis.',
         region: [0.44, 0.52, 0.14, 0.12],
         confidence: 0.82,
         criteriaId: 'img-die',
@@ -48,7 +53,9 @@ const SAMPLE_STUDIES: Record<string, ImagingResult> = {
       {
         label: 'Junctional zone — adenomyosis',
         narration:
-          'The junctional zone measures around 14 millimeters with the inner-to-outer ratio over 40 percent — consistent with adenomyosis. The routine read logged it at 9 millimeters, inside the 8-to-12 indeterminate band, and stopped there without the extra measurements.',
+          "There is also some thickening in the muscle of the uterus. It may help explain your symptoms, but it needs to be reviewed alongside the rest of your history — not treated as an answer on its own.",
+        clinicalDetail:
+          'Junctional zone measures approximately 14 mm with an inner-to-outer ratio over 40%, features consistent with adenomyosis. The routine read recorded 9 mm without the additional measurements.',
         region: [0.4, 0.34, 0.2, 0.16],
         confidence: 0.74,
         criteriaId: 'img-adenomyosis',

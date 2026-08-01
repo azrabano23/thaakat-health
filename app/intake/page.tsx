@@ -19,6 +19,7 @@ import {
 } from '@/lib/clusters';
 import type { ContextDoc } from '@/lib/moss';
 import { RecordTimeline, ConversationPanel, Nav } from '@/components/ui';
+import { ImagingEvidence } from '@/components/ImagingEvidence';
 import LiveVoice from './LiveVoice';
 
 type Turn = { role: 'patient' | 'thaakat'; text: string };
@@ -112,8 +113,14 @@ export default function Intake() {
     say('patient', patient.reply);
     push(patient.reported);
 
+    await wait(420);
+    say(
+      'thaakat',
+      "I'm sorry you've had to keep hearing that this is normal. Pain that disrupts your life deserves to be taken seriously.",
+    );
+
     // 3) the imaging moment — re-read the under-read scan (THE MOAT), only if she has one on file.
-    let img: { summary?: string; findings?: { narration: string }[] } | null = null;
+    let img: { summary?: string; findings?: { narration: string; clinicalDetail?: string }[] } | null = null;
     if (patient.imaging) {
       setPhase('reading');
       await wait(560);
@@ -127,7 +134,16 @@ export default function Intake() {
         .catch(() => null);
       await wait(430);
       if (img?.findings?.length) {
-        for (const f of img.findings) say('thaakat', f.narration);
+        say('thaakat', "I found a couple of things I'd want an endometriosis specialist to review with you.");
+        for (const f of img.findings) {
+          await wait(450);
+          say('thaakat', f.narration);
+        }
+        await wait(300);
+        say(
+          'thaakat',
+          "This isn't a diagnosis, and I don't want to overstate what one scan can tell us. But it is enough that you deserve a careful next conversation.",
+        );
         push({
           id: 'radiomics',
           label: patient.imaging.label,
@@ -146,7 +162,16 @@ export default function Intake() {
     setMatch(top);
     setPhase('assembled');
     await wait(430);
-    if (top) say('thaakat', top.cluster.narration);
+    if (top) {
+      say(
+        'thaakat',
+        patient.id === 'maria'
+          ? "When I put your history together — the timing of the pain, the bowel symptoms, the lab that wasn't followed up, and this scan — I see a pattern that is worth bringing to a specialist."
+          : "When I put these notes together, I see a pattern worth taking to a rheumatologist rather than treating each symptom separately.",
+      );
+      await wait(320);
+      say('thaakat', `The question I’d bring to your clinician is: ${top.cluster.ask}`);
+    }
 
     // 5) The Cost — live Stedi eligibility for the confirmatory step
     const cov: Coverage | null = await fetch('/api/eligibility', {
@@ -173,7 +198,7 @@ export default function Intake() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         symptoms: rec.filter((f) => f.specialty.startsWith('Patient')).map((f) => f.detail),
-        imagingFindings: img?.findings?.map((f) => f.narration),
+        imagingFindings: img?.findings?.map((f) => f.clinicalDetail ?? f.narration),
         referral: top
           ? {
               specialty: 'Gyn / endometriosis specialist',
@@ -194,7 +219,7 @@ export default function Intake() {
     await wait(280);
     say(
       'thaakat',
-      "I've assembled everything your doctors documented into one brief for the specialist. You've waited long enough. Let's get you answers.",
+      "I've put the important pieces into one brief your clinician can review, with the original sources attached. You shouldn't have to tell this whole story from scratch again.",
     );
     setRunning(false);
   }
@@ -338,6 +363,26 @@ export default function Intake() {
           )}
         </section>
 
+        <section className="call-bridge" aria-label="How the patient call reaches the clinical team">
+          <div className="call-bridge-copy">
+            <span className="label-sig">◆ From patient call to clinician action</span>
+            <p>
+              The patient speaks naturally; the care team sees the transcript, chart evidence, and next-step brief in
+              one place. The live button uses Deepgram. “Play demo” is an offline-safe replay of the same retrieval,
+              imaging, coverage, and FHIR steps.
+            </p>
+          </div>
+          <div className="call-flow" aria-label="Patient to Deepgram to Thaakat to clinical console">
+            <span>Patient call</span><i>→</i><span><b>Deepgram</b><small>Nova-3 Medical · Aura</small></span><i>→</i>
+            <span><b>Thaakat</b><small>Claude + Moss</small></span><i>→</i><span>Clinical console</span>
+          </div>
+          <div className="patient-benefits">
+            <span><b>Less repetition</b> Her history is assembled before the visit.</span>
+            <span><b>More agency</b> She leaves with a clinician question, not a black-box verdict.</span>
+            <span><b>A practical next step</b> Coverage and prior-auth status travel with the brief.</span>
+          </div>
+        </section>
+
         {/* ── two-column interactive workspace ── */}
         <div className="console">
           {/* LEFT: the Dossier + the assembled pattern */}
@@ -449,27 +494,21 @@ export default function Intake() {
           </div>
         </div>
 
-        {/* ── provenance strip: every sponsor doing real work in one run ── */}
-        <div className="console-foot">
-          <span className="foot-sponsor">
-            <b>Deepgram</b> voice
-          </span>
-          <span className="foot-sponsor">
-            <b>Claude</b> reasoning
-          </span>
-          <span className="foot-sponsor">
-            <b>Moss</b> &lt;10 ms retrieval
-          </span>
-          <span className="foot-sponsor">
-            <b>Medplum</b> FHIR system-of-record
-          </span>
-          <span className="foot-sponsor">
-            <b>Stedi</b> eligibility
-          </span>
-          <span className="foot-sponsor" style={{ marginLeft: 'auto', color: 'var(--faint)' }}>
-            Synthetic data · decision-support, not diagnosis
-          </span>
-        </div>
+        <ImagingEvidence reading={phase === 'reading'} />
+
+        <section className="sponsor-proof" aria-labelledby="sponsor-proof-title">
+          <div className="sponsor-proof-head">
+            <span className="label-sig">◆ Every sponsor is in the clinical loop</span>
+            <p id="sponsor-proof-title">Each call produces something useful for the patient and something reviewable for the care team.</p>
+          </div>
+          <div className="sponsor-grid">
+            <div><b>Deepgram</b><span>Patient speaks naturally</span><p>Nova-3 Medical handles clinical vocabulary; Aura speaks back. The clinician console receives the live transcript and extracted symptoms.</p></div>
+            <div><b>Moss</b><span>Finds the missing context</span><p>Retrieves the relevant notes and labs during the turn, so Thaakat can ask a chart-aware question without making the patient repeat years of history.</p></div>
+            <div><b>Medplum</b><span>Makes it reviewable</span><p>Writes the sourced `DetectedIssue`, voice observations, imaging report, referral, and authorization task into FHIR for a clinician to verify.</p></div>
+            <div><b>Stedi</b><span>Makes the plan actionable</span><p>Checks eligibility and estimated cost for the suggested next step, rather than leaving the patient with an unaffordable or unknowable recommendation.</p></div>
+          </div>
+          <p className="sponsor-note">Claude is the conversation and orchestration layer. Synthetic chart data only; research images are separately attributed; decision-support, never diagnosis.</p>
+        </section>
       </main>
     </div>
   );
