@@ -193,6 +193,14 @@ export function buildSettings(inputSampleRate: number) {
           keyterms: CLINICAL_KEYTERMS,
         },
       },
+      // Single provider, deliberately. `think` also accepts an array for ordered fallback, but
+      // Deepgram validates EVERY entry before applying Settings — so one unavailable id rejects the
+      // whole config with "Invalid agent.think settings - model not available" and a fallback meant
+      // as a safety net takes live voice down instead. That is exactly what
+      // `claude-3-5-haiku-latest` did here: documented in Deepgram's model list, NOT provisioned on
+      // this account. If you ever add a fallback, probe the id against a real agent socket first —
+      // the docs list is not evidence a model is usable. Probed OK on this account:
+      // claude-haiku-4-5, claude-sonnet-4-5, claude-sonnet-5.
       think: {
         provider: { type: 'anthropic', model: 'claude-haiku-4-5', temperature: 0.4 },
         prompt: THAAKAT_VOICE_PROMPT,
