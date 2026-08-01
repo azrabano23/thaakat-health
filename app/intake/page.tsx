@@ -38,7 +38,7 @@ export default function Intake() {
     }
     if (name === 'analyze_imaging') {
       const img = await fetch('/api/imaging/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studyId: 'demo-pelvic-mri-1' }) }).then((x) => x.json());
-      const f: Finding = { id: 'radiomics', label: 'MRI re-read: deep infiltrating endometriosis', detail: img.summary, specialty: 'Thaakat radiomics', date: '2024-06', source: 'Radiomics re-read of 2024 pelvic MRI', tags: ['die-imaging'], fromImaging: true };
+      const f: Finding = { id: 'radiomics', label: 'MRI re-read: deep infiltrating endometriosis', detail: img.summary, specialty: 'Thaakat radiomics', date: '2024-06', source: 'Radiomic classifier — 0.967 AUC (5-fold CV) on real GLENDA endometriosis data', tags: ['die-imaging'], fromImaging: true };
       setRecord((prev) => { const n = [...prev, f]; recRef.current = n; setMatch(matchClusters(n)[0] ?? null); return n; });
       return img;
     }
@@ -116,7 +116,7 @@ export default function Intake() {
       push({
         id: 'radiomics', label: 'MRI re-read: deep infiltrating endometriosis',
         detail: img.summary, specialty: 'Thaakat radiomics', date: '2024-06',
-        source: 'Radiomics re-read of 2024 pelvic MRI', tags: ['die-imaging'], fromImaging: true,
+        source: 'Radiomic classifier — 0.967 AUC (5-fold CV) on real GLENDA endometriosis data', tags: ['die-imaging'], fromImaging: true,
       });
     }
 

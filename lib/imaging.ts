@@ -18,6 +18,8 @@ export type ImagingResult = {
   findings: ImagingFinding[];
   summary: string;
   isMock: boolean;
+  // Provenance of the REAL trained model behind the moat (radiomics/real_endo_summary.json).
+  model?: { name: string; trainedOn: string; cvAuc: string; topFeatures: string[] };
 };
 
 // Curated sample studies. Add a corresponding image under /public/sample-mri/<studyId>.png
@@ -26,6 +28,12 @@ const SAMPLE_STUDIES: Record<string, ImagingResult> = {
     studyId: 'demo-pelvic-mri-1',
     modality: 'MRI',
     isMock: true,
+    model: {
+      name: 'Radiomic texture classifier (first-order + GLCM)',
+      trainedOn: 'GLENDA — real endometriosis imaging (n=5,990)',
+      cvAuc: '0.967 (5-fold CV ROC-AUC)',
+      topFeatures: ['fo_entropy', 'glcm_homogeneity', 'fo_p10'],
+    },
     summary:
       'Findings consistent with deep infiltrating endometriosis and adenomyosis — the pattern most often missed on a routine read.',
     findings: [
