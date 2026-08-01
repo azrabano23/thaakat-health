@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "seed": "npx --yes tsx scripts/seed-fhir.ts"
+    "seed": "npx --yes tsx scripts/seed-fhir.ts",
+    "seed:moss": "npx --yes tsx scripts/seed-moss.ts"
   },
   "dependencies": {
     "@deepgram/sdk": "^5.7.0",

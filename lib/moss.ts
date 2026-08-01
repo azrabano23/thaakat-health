@@ -14,9 +14,11 @@ import { DEMO_PATIENTS, type Finding } from './clusters';
 
 // Distinct from a criteria-only index: this corpus holds criteria AND patient records, so it
 // must not reuse a name an older index may already occupy.
-const INDEX = 'thaakat-context-v1';
-let mossLoaded = false;
-let mossClient: any = null;
+export const MOSS_INDEX = 'thaakat-context-v1';
+// A single in-flight promise, not a boolean. Concurrent callers must share one loadIndex —
+// with a flag, every request that arrives during the ~1.5s cold start starts its own index
+// download, and the retrieval-heavy design means several arrive per turn.
+let mossReady: Promise<any | null> | null = null;
 
 export type ContextDoc =
   | { kind: 'criterion'; id: string; text: string; tags: string[]; followUp?: string }
@@ -47,42 +49,57 @@ function buildCorpus(): ContextDoc[] {
   return [...criteria, ...records];
 }
 
-const CORPUS = buildCorpus();
+export const CORPUS = buildCorpus();
 const BY_ID = new Map(CORPUS.map((d) => [d.id, d]));
 
-async function getMoss(): Promise<any | null> {
-  const id = process.env.MOSS_PROJECT_ID;
-  const key = process.env.MOSS_PROJECT_KEY;
-  if (!id || !key) return null;
-  if (mossClient) return mossClient;
+/** What gets uploaded to Moss. `DocumentInfo` is `{ id, text }` — there is no metadata field, */
+/*  so scoping and tags are resolved locally from BY_ID after the query returns. */
+export function corpusDocuments(): { id: string; text: string }[] {
+  return CORPUS.map((d) => ({ id: d.id, text: d.text }));
+}
+
+async function connect(id: string, key: string): Promise<any | null> {
   try {
     // dynamic import so the app builds even before @moss-dev/moss is installed
     const mod: any = await import('@moss-dev/moss').catch(() => null);
     if (!mod) return null;
     const MossClient = mod.MossClient ?? mod.default?.MossClient ?? mod.default;
-    mossClient = new MossClient(id, key);
-    if (!mossLoaded) {
-      // one-time: ensure the corpus index exists + is loaded in-process
-      try {
-        await mossClient.createIndex(
-          INDEX,
-          CORPUS.map((d) => ({
-            id: d.id,
-            text: d.text,
-            metadata: { kind: d.kind, tags: d.tags, patientId: d.kind === 'record' ? d.patientId : undefined },
-          })),
-        );
-      } catch {
-        /* index may already exist */
-      }
-      await mossClient.loadIndex(INDEX);
-      mossLoaded = true;
-    }
-    return mossClient;
+    const client = new MossClient(id, key);
+
+    // loadIndex pulls the index and the embedding model into memory so query() runs locally
+    // (~2-3ms) instead of round-tripping to the cloud (~100-500ms). The sub-10ms claim depends
+    // entirely on this call having happened.
+    //
+    // Creating the index is NOT done here. It's a server-side build, and doing it inside a
+    // request handler meant a failure surfaced as a silent fallback rather than an error anyone
+    // could see. Provision it once with `pnpm seed:moss`.
+    await client.loadIndex(MOSS_INDEX);
+    return client;
   } catch (e) {
-    console.warn('[moss] falling back to local retrieval:', (e as Error).message);
+    const msg = (e as Error).message;
+    console.warn(
+      '[moss] falling back to local retrieval: %s%s',
+      msg,
+      /not found/i.test(msg) ? ` — run \`pnpm seed:moss\` to build "${MOSS_INDEX}".` : '',
+    );
     return null;
   }
+}
+
+/**
+ * Resolve the loaded Moss client, or null to use the local fallback.
+ * Exported so a warm-up can pay the cold start before the demo's first question.
+ */
+export function getMoss(): Promise<any | null> {
+  const id = process.env.MOSS_PROJECT_ID;
+  const key = process.env.MOSS_PROJECT_KEY;
+  if (!id || !key) return Promise.resolve(null);
+  // Retry on a later request if this attempt failed, but never run two loads at once.
+  mossReady ??= connect(id, key).then((c) => {
+    if (!c) mossReady = null;
+    return c;
+  });
+  return mossReady;
 }
 
 // --- local fallback: instant token-overlap similarity (no network, no embedding API) ---
@@ -134,13 +151,16 @@ export async function retrieveContextTimed(
   const moss = await getMoss();
   if (moss) {
     try {
-      // over-fetch, then scope down — Moss metadata filtering shape gets confirmed at the event
+      // Over-fetch, then scope down locally: Moss documents carry no metadata, so per-patient
+      // scoping is ours to do. `alpha` is the hybrid keyword/semantic mix (SDK default 0.8).
       const q0 = Date.now();
-      const results: any = await moss.query(INDEX, query, { topK: topK * 4, alpha: 0.8 });
+      const result: any = await moss.query(MOSS_INDEX, query, { topK: topK * 4, alpha: 0.8 });
       const retrievalMs = Date.now() - q0;
-      const items: any[] = results?.results ?? results?.matches ?? results ?? [];
+      // SearchResult is `{ query, docs }`. Reading `.results`/`.matches` here silently produced
+      // a non-array and threw into the fallback, so Moss never served a single query.
+      const items: any[] = Array.isArray(result?.docs) ? result.docs : [];
       const mapped = items
-        .map((r) => BY_ID.get(r.id ?? r.documentId))
+        .map((r) => BY_ID.get(r.id))
         .filter((d): d is ContextDoc => !!d && inScope(d, opts.patientId))
         .slice(0, topK);
       if (mapped.length) {
@@ -177,3 +197,8 @@ export async function retrieveCriteria(query: string, topK = 4): Promise<Criteri
 export function usingMoss(): boolean {
   return !!(process.env.MOSS_PROJECT_ID && process.env.MOSS_PROJECT_KEY);
 }
+
+// Start the load as soon as this module is imported, so the cold start overlaps with whatever
+// else the server is doing rather than landing on the first question. Fire-and-forget: callers
+// await the same shared promise, so this only ever moves the cost earlier, never duplicates it.
+void getMoss().catch(() => {});
