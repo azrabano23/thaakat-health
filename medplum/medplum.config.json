@@ -2,19 +2,19 @@
   "bots": [
     {
       "name": "thaakat-intake-to-fhir",
-      "id": "REPLACE_WITH_BOT_ID",
+      "id": "292e5e65-94e8-4497-be27-9cf8d78402e3",
       "source": "bots/intake-to-fhir.ts",
       "dist": "dist/intake-to-fhir.js"
     },
     {
       "name": "thaakat-eligibility",
-      "id": "REPLACE_WITH_BOT_ID",
+      "id": "3e2459e8-6e0f-436d-aacd-af3761716951",
       "source": "bots/eligibility.ts",
       "dist": "dist/eligibility.js"
     },
     {
       "name": "thaakat-reread-on-imaging",
-      "id": "REPLACE_WITH_BOT_ID",
+      "id": "9c454268-28e6-4f12-8fdc-de9df8fd8f36",
       "source": "bots/reread-on-imaging.ts",
       "dist": "dist/reread-on-imaging.js"
     }

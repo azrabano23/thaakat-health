@@ -17,34 +17,67 @@ function cx(...p: Array<string | false | null | undefined>) {
   return p.filter(Boolean).join(' ');
 }
 
-type ArchNode = { name: string; role: string; icon: ReactNode; moat?: boolean; tag?: string };
+type ArchNode = { name: string; role: string; icon: ReactNode; moat?: boolean; tag?: string; note: string };
 
 const ARCH: ArchNode[] = [
-  { name: 'Deepgram', role: 'Voice intake', icon: <MicIcon />, tag: 'listens' },
-  { name: 'Claude', role: 'Reasoning', icon: <SparkIcon />, tag: 'decides' },
-  { name: 'Moss', role: '<10ms retrieval', icon: <BoltIcon />, tag: 'recalls' },
-  { name: 'Radiomics', role: 'Re-reads the scan', icon: <ScanIcon />, moat: true, tag: 'the moat' },
-  { name: 'Medplum', role: 'FHIR · DetectedIssue', icon: <RecordIcon />, tag: 'writes' },
-  { name: 'Stedi', role: 'Coverage', icon: <CoverageIcon />, tag: 'clears' },
+  {
+    name: 'Deepgram',
+    role: 'Voice intake',
+    icon: <MicIcon />,
+    tag: 'listens',
+    note: 'She just talks — no forms. Deepgram’s live Voice Agent transcribes with Nova-3 Medical (so it actually hears “CA-125” and “dyspareunia,” not gibberish), speaks back in a natural voice, and lets her interrupt. It captures the symptom story a rushed visit throws away.',
+  },
+  {
+    name: 'Claude',
+    role: 'Reasoning',
+    icon: <SparkIcon />,
+    tag: 'decides',
+    note: 'The brain of the call. Claude chooses the next question, connects clues scattered across five specialists into one pattern, and turns the whole conversation into a structured medical record — using forced tool-use so it fills our exact schema instead of writing loose prose.',
+  },
+  {
+    name: 'Moss',
+    role: '<10 ms retrieval',
+    icon: <BoltIcon />,
+    tag: 'recalls',
+    note: 'While she’s still mid-sentence, Thaakat searches her entire multi-year record. Moss answers in about 8 milliseconds — a normal cloud database (150–300 ms) would make that an awkward pause — so “tell me about that CA-125 nobody followed up” can land inside the conversation, not after it.',
+  },
+  {
+    name: 'Radiomics',
+    role: 'Re-reads the scan',
+    icon: <ScanIcon />,
+    moat: true,
+    tag: 'the moat',
+    note: 'The part no other team can copy in a weekend. A real trained model reads the *texture* of the MRI a radiologist called “normal” (GLCM + first-order features, AUC 0.966 on the real GLENDA dataset) and flags the deep-endometriosis and adenomyosis signs the human eye skips on a routine read. Investigational decision-support — it raises a question, never a diagnosis.',
+  },
+  {
+    name: 'Medplum',
+    role: 'FHIR · DetectedIssue',
+    icon: <RecordIcon />,
+    tag: 'writes',
+    note: 'A finding a doctor can’t verify is worthless, so everything becomes real, auditable medical data. One atomic write creates 13 typed FHIR resources — headlined by a DetectedIssue authored by the radiomics “device,” with a Provenance trail proving each one was derived from her transcript. It’s a chart a real hospital system can ingest, not a chat log.',
+  },
+  {
+    name: 'Stedi',
+    role: 'Coverage',
+    icon: <CoverageIcon />,
+    tag: 'clears',
+    note: 'Finding the answer isn’t enough if she can’t afford the next step. Stedi runs real insurance eligibility (the 270/271 exchange) to price the recommended test and check whether prior authorization is needed — so the run ends with a covered, scheduled step, not another “come back later.”',
+  },
 ];
 
 export function ArchitectureFlow() {
   return (
     <div className="arch" role="list" aria-label="Thaakat system architecture">
-      {ARCH.map((n, i) => (
-        <Fragment key={n.name}>
-          <div className={cx('arch-node', n.moat && 'is-moat')} role="listitem">
-            {n.tag && <span className="arch-tag">{n.tag}</span>}
-            <span className="arch-ico">{n.icon}</span>
+      {ARCH.map((n) => (
+        <div key={n.name} className={cx('arch-node', n.moat && 'is-moat')} role="listitem">
+          <span className="arch-ico">{n.icon}</span>
+          <div className="arch-head">
             <span className="arch-name">{n.name}</span>
             <span className="arch-role">{n.role}</span>
+            {n.tag && <span className="arch-tag">{n.tag}</span>}
           </div>
-          {i < ARCH.length - 1 && (
-            <span className="arch-link" aria-hidden="true">
-              <span className="arch-pulse" />
-            </span>
-          )}
-        </Fragment>
+          <p className="arch-note">{n.note}</p>
+        </div>
       ))}
     </div>
   );

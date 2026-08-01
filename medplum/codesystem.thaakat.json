@@ -1,0 +1,217 @@
+{
+  "resourceType": "Bundle",
+  "type": "transaction",
+  "meta": {
+    "tag": [
+      { "system": "https://thaakat.health/fhir/tag", "code": "thaakat-terminology" }
+    ]
+  },
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:6d0b8c9e-0000-4000-a000-000000000001",
+      "resource": {
+        "resourceType": "CodeSystem",
+        "url": "https://thaakat.health/fhir/CodeSystem/thaakat-codes",
+        "identifier": [
+          {
+            "system": "https://thaakat.health/fhir/identifier/codesystem",
+            "value": "thaakat-codes"
+          }
+        ],
+        "version": "0.1.0",
+        "name": "ThaakatCodes",
+        "title": "Thaakat vetted decision-support codes (local subset)",
+        "status": "active",
+        "experimental": true,
+        "date": "2026-08-01",
+        "publisher": "Thaakat",
+        "description": "Self-contained local subset of the SNOMED CT, LOINC and CPT codes that Thaakat's cluster engine is allowed to emit. Each concept mirrors exactly one real code (recorded on the base-system / base-code properties) so the code can be validated server-side via CodeSystem/$validate-code instead of being trusted blindly. This retires the hallucinated-code risk: the AI selects a key, the server confirms the code is real. Decision-support / navigation only, never diagnosis; every concept is flagged verify=true for human confirmation before real clinical use. Production swaps this ~12-code subset for full UMLS-linked SNOMED/LOINC/CPT terminology while keeping the same $validate-code contract.",
+        "caseSensitive": true,
+        "content": "complete",
+        "count": 12,
+        "property": [
+          {
+            "code": "base-system",
+            "uri": "https://thaakat.health/fhir/concept-properties#base-system",
+            "description": "Canonical URL of the source terminology this concept mirrors (SNOMED CT, LOINC or CPT).",
+            "type": "string"
+          },
+          {
+            "code": "base-code",
+            "uri": "https://thaakat.health/fhir/concept-properties#base-code",
+            "description": "The code exactly as it appears in the source terminology.",
+            "type": "string"
+          },
+          {
+            "code": "verify",
+            "uri": "https://thaakat.health/fhir/concept-properties#verify",
+            "description": "Flagged for human verification before any real clinical use (mirrors verify:true in lib/fhir/model.ts).",
+            "type": "boolean"
+          }
+        ],
+        "concept": [
+          {
+            "code": "129103003",
+            "display": "Endometriosis (disorder)",
+            "property": [
+              { "code": "base-system", "valueString": "http://snomed.info/sct" },
+              { "code": "base-code", "valueString": "129103003" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "79924004",
+            "display": "Adenomyosis",
+            "property": [
+              { "code": "base-system", "valueString": "http://snomed.info/sct" },
+              { "code": "base-code", "valueString": "79924004" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "83901003",
+            "display": "Sjögren's syndrome",
+            "property": [
+              { "code": "base-system", "valueString": "http://snomed.info/sct" },
+              { "code": "base-code", "valueString": "83901003" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "396331005",
+            "display": "Coeliac disease",
+            "property": [
+              { "code": "base-system", "valueString": "http://snomed.info/sct" },
+              { "code": "base-code", "valueString": "396331005" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "10334-1",
+            "display": "Cancer Ag 125 [Units/vol] in Serum or Plasma",
+            "property": [
+              { "code": "base-system", "valueString": "http://loinc.org" },
+              { "code": "base-code", "valueString": "10334-1" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "718-7",
+            "display": "Hemoglobin [Mass/volume] in Blood",
+            "property": [
+              { "code": "base-system", "valueString": "http://loinc.org" },
+              { "code": "base-code", "valueString": "718-7" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "2276-4",
+            "display": "Ferritin [Mass/volume] in Serum or Plasma",
+            "property": [
+              { "code": "base-system", "valueString": "http://loinc.org" },
+              { "code": "base-code", "valueString": "2276-4" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "1988-5",
+            "display": "C reactive protein [Mass/volume] in Serum or Plasma",
+            "property": [
+              { "code": "base-system", "valueString": "http://loinc.org" },
+              { "code": "base-code", "valueString": "1988-5" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "5048-4",
+            "display": "Antinuclear Ab [Titer] in Serum by IF",
+            "property": [
+              { "code": "base-system", "valueString": "http://loinc.org" },
+              { "code": "base-code", "valueString": "5048-4" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "72197",
+            "display": "MRI pelvis without and with contrast",
+            "property": [
+              { "code": "base-system", "valueString": "http://www.ama-assn.org/go/cpt" },
+              { "code": "base-code", "valueString": "72197" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "86235",
+            "display": "Extractable nuclear antigen antibody (anti-Ro/La)",
+            "property": [
+              { "code": "base-system", "valueString": "http://www.ama-assn.org/go/cpt" },
+              { "code": "base-code", "valueString": "86235" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          },
+          {
+            "code": "83516",
+            "display": "Tissue transglutaminase IgA",
+            "property": [
+              { "code": "base-system", "valueString": "http://www.ama-assn.org/go/cpt" },
+              { "code": "base-code", "valueString": "83516" },
+              { "code": "verify", "valueBoolean": true }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "POST",
+        "url": "CodeSystem",
+        "ifNoneExist": "url=https://thaakat.health/fhir/CodeSystem/thaakat-codes"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:6d0b8c9e-0000-4000-a000-000000000002",
+      "resource": {
+        "resourceType": "ValueSet",
+        "url": "https://thaakat.health/fhir/ValueSet/thaakat-codes",
+        "identifier": [
+          {
+            "system": "https://thaakat.health/fhir/identifier/valueset",
+            "value": "thaakat-codes"
+          }
+        ],
+        "version": "0.1.0",
+        "name": "ThaakatCodesValueSet",
+        "title": "Thaakat vetted decision-support codes (value set)",
+        "status": "active",
+        "experimental": true,
+        "date": "2026-08-01",
+        "publisher": "Thaakat",
+        "description": "The complete set of codes Thaakat is permitted to emit, drawn from the local Thaakat CodeSystem. Used by lib/fhir/terminology.ts and ValueSet/$validate-code to confirm a coding is one Thaakat has vetted before it is written to a patient's chart.",
+        "compose": {
+          "include": [
+            {
+              "system": "https://thaakat.health/fhir/CodeSystem/thaakat-codes",
+              "concept": [
+                { "code": "129103003", "display": "Endometriosis (disorder)" },
+                { "code": "79924004", "display": "Adenomyosis" },
+                { "code": "83901003", "display": "Sjögren's syndrome" },
+                { "code": "396331005", "display": "Coeliac disease" },
+                { "code": "10334-1", "display": "Cancer Ag 125 [Units/vol] in Serum or Plasma" },
+                { "code": "718-7", "display": "Hemoglobin [Mass/volume] in Blood" },
+                { "code": "2276-4", "display": "Ferritin [Mass/volume] in Serum or Plasma" },
+                { "code": "1988-5", "display": "C reactive protein [Mass/volume] in Serum or Plasma" },
+                { "code": "5048-4", "display": "Antinuclear Ab [Titer] in Serum by IF" },
+                { "code": "72197", "display": "MRI pelvis without and with contrast" },
+                { "code": "86235", "display": "Extractable nuclear antigen antibody (anti-Ro/La)" },
+                { "code": "83516", "display": "Tissue transglutaminase IgA" }
+              ]
+            }
+          ]
+        }
+      },
+      "request": {
+        "method": "POST",
+        "url": "ValueSet",
+        "ifNoneExist": "url=https://thaakat.health/fhir/ValueSet/thaakat-codes"
+      }
+    }
+  ]
+}

@@ -29,3 +29,6 @@ coverage/
 *.tsbuildinfo
 next-env.d.ts
 .env*
+
+# bot build output (esbuild)
+medplum/dist/

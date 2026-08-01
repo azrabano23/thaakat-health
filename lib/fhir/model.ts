@@ -23,6 +23,8 @@ import type {
   Observation,
   DiagnosticReport,
   DetectedIssue,
+  RiskAssessment,
+  ClinicalImpression,
   Device,
   ServiceRequest,
   Claim,
@@ -225,8 +227,9 @@ export function buildChartBundle({ patient, extraction, transcriptDoc }: ChartBu
   }
 
   // radiomics re-read → DiagnosticReport (conclusion carries the narration lines)
+  let imagingReportUrn: string | undefined;
   if (extraction.imagingFindings?.length) {
-    add(
+    imagingReportUrn = add(
       {
         resourceType: 'DiagnosticReport',
         status: 'preliminary',
@@ -235,6 +238,44 @@ export function buildChartBundle({ patient, extraction, transcriptDoc }: ChartBu
         conclusion: extraction.imagingFindings.join(' '),
       } as DiagnosticReport,
       'DiagnosticReport',
+    );
+  }
+
+  // numeric radiomics/cluster score → RiskAssessment (the 0..1 confidence finally has a home), and the
+  // assembled cross-specialty pattern → ClinicalImpression (its semantic home). Decision-support, never
+  // diagnosis. RiskAssessment is added first so the ClinicalImpression can point its prognosis at it.
+  if (extraction.cluster) {
+    const riskUrn = add(
+      {
+        resourceType: 'RiskAssessment',
+        status: 'preliminary',
+        subject: patient,
+        occurrenceDateTime: new Date().toISOString(),
+        method: { text: 'Thaakat radiomics texture classifier (investigational)' },
+        basis: [{ reference: imagingReportUrn ?? conditionUrn }],
+        prediction: [
+          {
+            outcome: { text: extraction.cluster.name },
+            probabilityDecimal: extraction.cluster.confidence,
+            rationale: extraction.cluster.ask,
+          },
+        ],
+      } as RiskAssessment,
+      'RiskAssessment',
+    );
+
+    add(
+      {
+        resourceType: 'ClinicalImpression',
+        status: 'completed',
+        subject: patient,
+        date: new Date().toISOString(),
+        summary: `${extraction.cluster.name} — ${extraction.cluster.ask}`,
+        investigation: [{ code: { text: 'Assembled cross-specialty record' }, item: implicated }],
+        finding: [{ itemReference: { reference: conditionUrn } }],
+        prognosisReference: [{ reference: riskUrn }],
+      } as ClinicalImpression,
+      'ClinicalImpression',
     );
   }
 

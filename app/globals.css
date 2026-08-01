@@ -495,23 +495,23 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
    Blueprint pipeline (architecture) + expansion ladder
    ========================================================================== */
 
-.arch { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
-.arch-node { position: relative; flex: 1; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--border); background: var(--panel); }
+.arch { display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+.arch-node { display: grid; grid-template-columns: 42px minmax(120px, 165px) 1fr; align-items: start; gap: 16px; padding: 18px 20px; border-bottom: 1px solid var(--border); background: var(--panel); }
 .arch-node:last-child { border-bottom: 0; }
-.arch-node.is-moat { background: color-mix(in srgb, var(--signal) 7%, var(--panel)); }
-.arch-ico { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text-2); }
+.arch-node.is-moat { background: color-mix(in srgb, var(--signal) 6%, var(--panel)); }
+.arch-ico { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: var(--r-sm); color: var(--text-2); }
 .arch-node.is-moat .arch-ico { color: var(--signal); border-color: var(--signal); }
 .arch-ico svg { width: 18px; height: 18px; }
-.arch-name { font-family: var(--font-display); font-weight: 500; font-size: 15px; }
+.arch-head { display: flex; flex-direction: column; gap: 3px; }
+.arch-name { font-family: var(--font-display); font-weight: 500; font-size: 16px; color: var(--text); }
 .arch-role { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--muted); }
-.arch-tag { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+.arch-tag { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-top: 3px; }
 .arch-node.is-moat .arch-tag { color: var(--signal); }
-.arch-link, .arch-pulse { display: none; }
-@media (min-width: 1000px) {
-  .arch { flex-direction: row; }
-  .arch-node { flex-direction: column; grid-template-columns: 1fr; text-align: center; justify-items: center; gap: 8px; border-bottom: 0; border-right: 1px solid var(--border); padding: 22px 14px 20px; }
-  .arch-node:last-child { border-right: 0; }
-  .arch-tag { position: static; transform: none; order: -1; }
+.arch-note { margin: 0; font-size: 14px; line-height: 1.6; color: var(--text-2); max-width: 70ch; }
+.arch-note em { color: var(--signal); font-style: italic; }
+@media (max-width: 640px) {
+  .arch-node { grid-template-columns: 38px 1fr; }
+  .arch-note { grid-column: 1 / -1; }
 }
 
 .ladder { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
