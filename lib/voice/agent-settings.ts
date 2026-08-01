@@ -225,7 +225,7 @@ export function buildSettings(inputSampleRate: number) {
           functions: THAAKAT_FUNCTIONS,
         },
         {
-          provider: { type: 'anthropic', model: 'claude-3-5-haiku-latest', temperature: 0.4 },
+          provider: { type: 'anthropic', model: 'claude-sonnet-4-5', temperature: 0.4 },
           prompt: THAAKAT_VOICE_PROMPT,
           functions: THAAKAT_FUNCTIONS,
         },
