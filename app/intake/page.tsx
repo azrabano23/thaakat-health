@@ -184,6 +184,7 @@ export default function Intake() {
         priorAuthRequired: pa,
         cluster: top ? { name: top.cluster.name, ask: top.cluster.ask, confidence: top.confidence } : undefined,
         patientName: patient.name,
+        demoPatientId: patient.id, // resolves the seeded chart — lib/demo-identity.ts
       }),
     })
       .then((x) => x.json())

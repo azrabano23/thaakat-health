@@ -263,6 +263,8 @@ export class ThaakatToolRunner {
         ? { name: top.cluster.name, ask: top.cluster.ask, confidence: top.confidence }
         : undefined,
       patientName: this.patient.name,
+      // Write onto her seeded chart rather than a fresh Patient — see lib/demo-identity.ts.
+      demoPatientId: this.patient.id,
     });
     this.events.onCommit?.(committed);
     return {

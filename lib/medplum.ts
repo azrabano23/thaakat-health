@@ -10,6 +10,7 @@
 import { MedplumClient, createReference } from '@medplum/core';
 import type { Patient, DocumentReference, Reference } from '@medplum/fhirtypes';
 import { buildChartBundle, extractionFromChartInput } from './fhir/model';
+import { resolveDemoPatient } from './demo-identity';
 
 let cached: MedplumClient | null = null;
 
@@ -32,6 +33,10 @@ export async function getMedplum(): Promise<MedplumClient | null> {
 
 export type ChartInput = {
   patientId?: string;
+  // The DemoPatient id from lib/clusters.ts ("maria"). Resolves to the seeded chart via the
+  // identifier `pnpm seed` stamped on it, so the assembled picture is written ONTO her existing
+  // record instead of onto a fresh empty Patient standing next to it.
+  demoPatientId?: string;
   patientName?: { given: string; family: string };
   symptoms: string[]; // plain-language symptom snippets Thaakat captured
   imagingFindings?: string[]; // radiomics narration lines
@@ -58,6 +63,10 @@ export async function commitChart(input: ChartInput): Promise<CommitResult> {
   let patient: Patient;
   if (input.patientId) {
     patient = await medplum.readResource('Patient', input.patientId);
+  } else if (input.demoPatientId) {
+    // The seeded chart, resolved by identifier — see lib/demo-identity.ts. Without this the
+    // commit lands on a fresh empty Patient and the assembled record has no history behind it.
+    patient = await resolveDemoPatient(medplum, input.demoPatientId, input.patientName);
   } else {
     patient = await medplum.createResource<Patient>({
       resourceType: 'Patient',
