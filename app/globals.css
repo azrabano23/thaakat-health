@@ -640,6 +640,31 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
 .convo-row.thaakat .bubble-who { color: var(--signal); }
 
 /* ============================================================================
+   STORY — the human hook (Meet Maria) before the stats
+   ========================================================================== */
+.story { margin-top: 30px; }
+.story-lead {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.4rem, 2.7vw, 2.15rem);
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0;
+  max-width: 24ch;
+  text-wrap: balance;
+}
+.story-body { margin: 22px 0 0; max-width: 60ch; }
+.story-body p { font-size: clamp(1.02rem, 1.4vw, 1.18rem); line-height: 1.62; color: var(--text-2); margin: 0 0 14px; }
+.story-body strong { color: var(--text); font-weight: 600; }
+.story-body em { color: var(--signal); font-style: italic; }
+.story-why { display: grid; gap: clamp(18px, 3vw, 36px); margin-top: 34px; border-top: 1.5px solid var(--text); padding-top: 24px; }
+@media (min-width: 820px) { .story-why { grid-template-columns: 1fr 1fr; } }
+.story-why h4 { margin: 10px 0 8px; font-family: var(--font-display); font-weight: 500; font-size: clamp(1.1rem, 1.8vw, 1.35rem); letter-spacing: -0.01em; color: var(--text); }
+.story-why p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.6; max-width: 52ch; }
+.story-why strong { color: var(--text-2); font-weight: 600; }
+
+/* ============================================================================
    MODEL CARD — real ROC curve + datasets + pipeline (the imaging moat, shown)
    ========================================================================== */
 .modelcard { display: grid; gap: clamp(20px, 3vw, 36px); margin-top: 20px; align-items: start; }

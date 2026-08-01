@@ -161,6 +161,53 @@ export default function Home() {
           </div>
         </section>
 
+        {/* ===================== STORY — MEET MARIA ===================== */}
+        <section className="section-tight" id="story">
+          <div className="shell">
+            <div className="runhead">
+              <span className="no">A patient</span>
+              <span>Why it takes a decade</span>
+              <span className="ln" />
+            </div>
+            <div className="story">
+              <p className="story-lead">For ten years, they told Maria her pain was normal.</p>
+              <div className="story-body">
+                <p>
+                  A GP called it bad period cramps. A gastroenterologist called it IBS. A radiologist called her
+                  ultrasound “unremarkable.” She was poked, scanned, and sent home — seven doctors, missing work every
+                  month, while the child she’d been trying for never came. To finally get an answer, she’ll have to be{' '}
+                  <em>cut open</em>: surgery is still the only way to confirm endometriosis.
+                </p>
+                <p>
+                  Maria is a composite — but her story is the median. She is <strong>1 in 10 women — 190 million of
+                  them</strong>, and the average one waits <strong>7–10 years</strong>, seeing seven doctors first.
+                </p>
+              </div>
+
+              <div className="story-why">
+                <div>
+                  <span className="label-sig">Why there’s no early answer</span>
+                  <h4>There is no non-invasive test.</h4>
+                  <p>
+                    No blood test, no scan that settles it. To confirm endometriosis a surgeon has to look inside — so
+                    women wait years for a <strong>laparoscopy</strong> no one is quick to schedule, treated for
+                    everything else in the meantime.
+                  </p>
+                </div>
+                <div>
+                  <span className="label-sig">Why the scan “looks normal”</span>
+                  <h4>The early signal is written in texture.</h4>
+                  <p>
+                    Subtle changes a routine MRI or ultrasound read isn’t looking for. By the time it’s obvious to the
+                    eye, it’s often years and lesions too late — yet the clues sat in her record the whole time.{' '}
+                    <strong>Nobody’s job was to read them together.</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ===================== 2 · THE PROBLEM + MARKET ===================== */}
         <section className="section" id="problem">
           <div className="shell">
