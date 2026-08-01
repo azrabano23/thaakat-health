@@ -48,6 +48,53 @@ const METRICS = [
 
 const BUYERS = ['Academic medical centers', 'Fertility clinics', 'Women’s-health clinics', 'Imaging centers'];
 
+// One run of /intake — each sponsor doing real work, with the proof we verified live.
+const SPONSOR_RUN = [
+  {
+    n: '01',
+    tool: 'Deepgram',
+    role: 'The voice sensor',
+    body: 'A live Voice Agent (Nova-3 Medical + clinical keyterms, Aura TTS, barge-in) runs the spoken interview, with Claude as the reasoning model — capturing the symptom story a rushed visit loses.',
+    proof: 'Live socket',
+  },
+  {
+    n: '02',
+    tool: 'Moss',
+    role: 'Chart-aware retrieval',
+    body: 'Every turn, Moss searches her whole record plus the diagnostic criteria, so Thaakat’s next question cites what’s actually in her chart — inside the conversation, not after it.',
+    proof: '8 ms measured',
+  },
+  {
+    n: '03',
+    tool: 'Claude + radiomics',
+    role: 'The reasoning & the moat',
+    body: 'Claude assembles the cross-specialty cluster and extracts structured findings; the radiomics model re-reads the under-read scan for the signs a routine read misses.',
+    proof: 'AUC 0.966',
+  },
+  {
+    n: '04',
+    tool: 'Medplum',
+    role: 'FHIR system of record',
+    body: 'One transaction writes the whole picture — a DetectedIssue (author = the radiomics Device, implicated = the cluster), Condition, Observations, DiagnosticReport, ServiceRequest, Claim(preauth), Task — plus a Provenance proving every resource is AI-derived from the transcript.',
+    proof: '13 resources / run',
+  },
+  {
+    n: '05',
+    tool: 'Stedi',
+    role: 'Coverage & the next step',
+    body: 'Real 270/271 eligibility prices the confirmatory step and flags whether prior auth is needed — closing the loop from “pattern found” to “covered, actionable step.”',
+    proof: 'Test-mode 200',
+  },
+];
+
+// Clinical backing — the product is grounded in guidelines + peer-reviewed literature (docs/EVIDENCE.md).
+const CLINICAL_BACKING = [
+  { src: 'ESHRE 2022 · NICE NG73', claim: 'The symptom cluster we assemble is the guideline “suspect endometriosis” list — and a normal scan does not exclude disease. Laparoscopy is no longer the required gold standard.' },
+  { src: 'Van Such 2017 (Mayo, n=286)', claim: 'When one team re-read the whole record, 21% of referred cases got a different diagnosis and 66% were refined — evidence that assembly changes management.' },
+  { src: 'Brady 2017 · Insights into Imaging', claim: '60–80% of radiology errors are perceptual — the finding was already visible on the first scan. That is exactly what the re-read targets.' },
+  { src: 'FDA CDS Guidance 2022', claim: 'Record assembly is decision-support; image analysis is a device — so we frame the radiomics re-read as investigational SaMD, never autonomous diagnosis.' },
+];
+
 export default function Home() {
   return (
     <div className="paper">
@@ -301,7 +348,28 @@ export default function Home() {
               lede="Not a wrapper. Four sponsors do real work in the loop — and the moat is a trained radiomics model reading the pixels a radiologist skipped."
             />
 
-            <div style={{ marginTop: 38 }}>
+            <div style={{ marginTop: 40 }}>
+              <span className="label-sig" style={{ display: 'block', marginBottom: 16 }}>
+                One run — every sponsor load-bearing, verified live
+              </span>
+              <div className="steps-ed">
+                {SPONSOR_RUN.map((s) => (
+                  <div key={s.n} className="step-ed">
+                    <span className="n">{s.n}</span>
+                    <h3>
+                      {s.tool}{' '}
+                      <span className="muted" style={{ fontWeight: 400, fontSize: '0.78em' }}>· {s.role}</span>
+                    </h3>
+                    <p>
+                      {s.body}{' '}
+                      <span className="pill pill-signal" style={{ marginLeft: 2, verticalAlign: 'middle' }}>{s.proof}</span>
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: 40 }}>
               <span className="label-sig" style={{ display: 'block', marginBottom: 16 }}>
                 System architecture — every stage load-bearing
               </span>
@@ -338,7 +406,29 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="row wrap" style={{ gap: 18, marginTop: 28 }}>
+            <div style={{ marginTop: 40 }}>
+              <span className="label-sig" style={{ display: 'block', marginBottom: 16 }}>
+                Clinical backing — grounded in the guidelines, not vibes
+              </span>
+              <div style={{ borderTop: '1.5px solid var(--text)' }}>
+                {CLINICAL_BACKING.map((c) => (
+                  <div
+                    key={c.src}
+                    style={{ display: 'grid', gap: 6, padding: '18px 0', borderBottom: '1px solid var(--border)' }}
+                  >
+                    <span className="label-sig">{c.src}</span>
+                    <p style={{ margin: 0, color: 'var(--text-2)', fontSize: 15, lineHeight: 1.55, maxWidth: '78ch' }}>
+                      {c.claim}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="meta" style={{ marginTop: 14 }}>
+                Every figure sourced in <span className="sig">docs/EVIDENCE.md</span>
+              </p>
+            </div>
+
+            <div className="row wrap" style={{ gap: 18, marginTop: 36 }}>
               <a href="/intake" className="btn">
                 <span>See it work — the live demo</span>
                 <ArrowIcon />
