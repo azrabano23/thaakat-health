@@ -72,10 +72,11 @@ Diagnostic delay is usually blamed on "some diseases are hard." It mostly isn't 
 
 ## 5. Why this gets the YC interview
 
-- **Hits YC's actual RFS ("AI Personalized Medicine"):** *"analyze personalized health data — a diagnostic test, genome scan, EHR — for highly accurate, user-specific suggestions… n=1."* A radiomics re-read + record assembly is a bullseye.
-- **Hits Medplum's #1 2026 bet:** prior-auth / interoperability compliance (CMS-0057-F, Jan 2027) — our coverage layer speaks to it, and to **Cody Ebberson, whose first startup (MedXT) was medical imaging.**
-- **The panel tilts our way:** Cody (Medplum, ex-imaging), Sri (Moss, real-time retrieval), Diana Hu (YC, scores founder-fit) all lean toward our strengths; Deepgram's judges (Naomi, Victor) reward real voice engineering.
-- **A fundable company, not a feature:** vertical wedge (endo) → platform (any delayed/under-read condition) → the assembled longitudinal + imaging data becomes a defensible data moat.
+- **Maps to YC's current RFS:** *AI-Native Compliance Infrastructure* (monitoring a scattered record, flagging the anomaly nobody assembled — AI doing a human-bottlenecked task faster/cheaper) and *Multiplayer AI* (a multi-agent system). Ground it in YC's real RFS language, not the (nonexistent) "women's-health RFS."
+- **Maps to interoperability's moment:** the record + coverage pipes are open by federal mandate (patient-access APIs; CMS-0057-F prior-auth FHIR by Jan 2027) — the "why now" for a layer that runs on top.
+- **Every sponsor is load-bearing, on real infra** (see §7) — this isn't a Claude wrapper with four logos; it's four real integrations plus a trained imaging model in one run.
+- **A fundable company, not a feature:** vertical wedge (endo) → platform (any delayed/under-read condition) → the assembled longitudinal + imaging data becomes a defensible data moat that compounds per patient.
+- **Founder-market fit is the unfair advantage:** the bottleneck here isn't clinical knowledge (physicians have that) — it's ML + systems (assemble the record, re-read the pixels). Azra did the endometriosis radiomics research; we're not doctors with an idea, we're the people who built the model doctors don't have.
 
 ---
 
@@ -105,28 +106,50 @@ Diagnostic delay is usually blamed on "some diseases are hard." It mostly isn't 
 
 ---
 
-## 7. How we use EVERY sponsor (all load-bearing — the submission form scores this)
+## 7. How we use EVERY sponsor — and where to look (sponsors: tell us what to fix)
 
-- **🟦 Deepgram** — Voice Agent API (Nova-3/Flux STT tuned on clinical vocab so it won't mangle "furosemide," Aura TTS, barge-in), **Claude as the `think` model.** We tune `eager_eot_threshold` so retrieval starts *before* Maria finishes her sentence — no awkward pause. Voice is the *sensor* that captures what the chart doesn't have.
-- **🟪 Moss** — the whole multi-year record indexed **in-browser**, sub-10ms, no network hop. This is what physically makes "chart-aware questions in real time" possible (a cloud vector DB is too slow for the turn gap). Bonus talking point: **the record never leaves the device.** Use it retrieval-heavy — many lookups per turn.
-- **🟩 Medplum** — the record IS FHIR (`Encounter`/`Observation`/`DocumentReference`/`ImagingStudy`/the orphaned lab). Bots + the `$ai` op (with `fhir_request` tools) write `DetectedIssue` + the Dossier + `DocumentReference`, each with a `Provenance` link; prior auth as `Claim(use="preauthorization")`. Clinician view from `@medplum/react`. ⚠️ Bots are OFF by default — confirm enabled at the event (we have a non-bot fallback).
-- **🟨 Stedi** — `CoverageEligibilityRequest` → real 270/271 eligibility (test mode) → the copay for the confirmatory test/imaging. Closes the loop from "pattern found" to "actionable step with a price." **Stedi has no 278 API** — we model prior auth as FHIR (the exact gap CMS-0057-F closes by 2027 = a *stronger* story than faking it).
+> **For the Deepgram / Moss / Medplum / Stedi teams:** each integration below points at the exact file and its **verified status** (we called your real APIs, not mocks). We'd genuinely value a "you're using X wrong / you should use Y" — open an issue or tell us at the event. One run of `/intake` exercises all four.
 
-**The "generalizable, not hardcoded" tell:** we ship **3 cluster definitions** (endometriosis + Sjögren's + one more), not 1 — that's the difference between "demo" and "system" when a judge asks.
+- **🟦 Deepgram** — live **Voice Agent API** (`wss://agent.deepgram.com/v1/agent/converse`) with **Claude as the `think` model**, `nova-3-medical` listen + clinical keyterms (endometriosis, dysmenorrhea, dyspareunia, CA-125…) so it won't mangle the vocabulary, Aura-2 TTS, barge-in. Browser gets a short-lived token minted server-side. Voice is the *sensor* that captures the symptom story a form loses. → `lib/voice/*`, `app/intake/LiveVoice.tsx`, `app/api/deepgram/token/route.ts`, `docs/VOICE_AGENT.md`. **✅ live.**
+- **🟪 Moss** — real-time semantic retrieval over the patient's **whole record** (+ the diagnostic-criteria corpus), so Thaakat's questions are chart-aware *inside* the conversation. Called **server-side** from an API route (`createIndex`/`loadIndex`/`query`); **measured ~8 ms retrieval**, which is why a chart-aware question can land in the turn gap. Retrieval-heavy by design; falls back to a local cosine index if keys are absent so the demo never hard-fails. → `lib/moss.ts`, `app/api/moss/query/route.ts`, `pnpm seed:moss`. **✅ live, 8 ms verified.**
+- **🟩 Medplum** — FHIR R4 system of record. One commit writes the whole picture as typed resources: **`DetectedIssue`** (`author` = the radiomics `Device`, `evidence` → the `Condition`) — the "nobody's job was to see this" made structural — plus `Condition`/`Observation`/`DiagnosticReport`/`ServiceRequest`/`Claim(use="preauthorization")`/`Task`. A `Subscription → Bot` re-runs the model on new imaging (closed-loop). → `lib/medplum.ts`, `app/api/medplum/commit/route.ts`, `medplum/bots/`. **✅ live — a real 9-resource transaction writes on each demo run.**
+- **🟨 Stedi** — real **270/271 eligibility** (`CoverageEligibilityRequest`, test-mode payers) → coverage + copay for the confirmatory step, and `authOrCertIndicator` drives whether prior auth is needed. Closes the loop from "pattern found" → "actionable, priced step." **Stedi has no 278 API** — we model prior auth as FHIR `Claim(use="preauthorization")` + `Task`, the exact gap CMS-0057-F closes by Jan 2027. → `app/api/eligibility/route.ts`. **✅ live, test-mode 200 verified.**
+
+**The "generalizable, not hardcoded" tell:** we ship **3 cluster definitions** (endometriosis + Sjögren's + celiac) and **2 seeded patients** you can switch between live — the same engine fires a *different* pattern, which is the difference between "demo" and "system."
 
 ---
 
-## 8. Honest notes (don't get burned)
+## 8. The datasets (real, public)
 
+All patient data in the demo is **synthetic**. The imaging **model is trained on real, public data**:
+
+- **GLENDA v1.5** — Gynecologic Laparoscopy ENdometriosis DAtaset (Leibetseder et al., ITEC/Klagenfurt): real laparoscopy frames, endometriosis pathology vs. no-pathology. We use **5,990 frames** (500 pathology / 5,490 no-pathology). → what the shipped classifier is trained on.
+- **UT-EndoMRI** (Zenodo) — 133 real pelvic-MRI cases with endometriosis annotations → the **production path**: the same texture pipeline applied to patient-level MRI (the real product surface).
+- **MMOTU** — multi-modal ovarian tumor ultrasound → generalization / ultrasound arm.
+
+See [`radiomics/`](radiomics/) and [`docs/DATASETS.md`](docs/DATASETS.md).
+
+## 9. The model (real numbers — report AUC *with* n)
+
+`lib/radiomics-model.json` + `radiomics/real_endo_summary.json` are generated by the pipeline, not hand-written.
+
+- **Features:** scikit-image **GLCM + first-order texture** (12 features) — the same texture family PyRadiomics computes, without its fragile C build.
+- **Classifier:** RandomForest (300 trees, class-weight balanced), **5-fold stratified CV**, out-of-fold scoring (no leakage).
+- **Result:** pooled OOF **ROC-AUC 0.966** (per-fold 0.967 ± 0.012), **average precision 0.864** at 8.35% prevalence. Top features: `fo_entropy`, `glcm_homogeneity`, `fo_p10`.
+- **Honest caveats (we say these first):** frame-level not patient-level, single dataset, no external validation yet. Endometriosis radiomics is **research-grade** across the literature — we frame the re-read as **investigational decision-support (SaMD)**, never autonomous diagnosis. Full sourcing + the regulatory framing in [`docs/EVIDENCE.md`](docs/EVIDENCE.md).
+
+## 10. Honest notes (don't get burned)
+
+- **Regulatory precision:** the **record-assembly layer is decision-support** (surfaces documented findings + a question); the **imaging re-read is investigational SaMD** (FDA CDS Criterion 1 — anything that analyzes an image is a device). Never call the image tool "non-device CDS." See `docs/EVIDENCE.md §5`.
+- **Every stat is sourced** in `docs/EVIDENCE.md`. The "88% of diagnoses changed" figure (Mayo, Van Such 2017) is a **selected referral population, n=286** — attribute it that way. Avoid the round "7 doctors."
 - **Stedi has no prior-auth (278) API** — model PA as FHIR `Claim(use="preauthorization")` + `Task`.
-- **Medplum Bots are OFF by default (paid feature)** — confirm enabled TODAY / first thing tomorrow. Non-bot fallback exists (`/api/medplum/commit`).
-- **Synthetic data only** — Moss HIPAA / Deepgram BAA are Enterprise-only; never real PHI on free tiers.
-- **Radiomics in 6 hrs is the risk** — curated findings + overlay on a sample MRI, with a clean "swap in the real model" seam (`lib/imaging.ts`). Frame as decision-support.
+- **Medplum Bots are OFF by default (paid feature)** — the non-bot fallback (`/api/medplum/commit`) is what writes on stage; bots add the closed-loop `Subscription`.
+- **Privacy / HIPAA:** synthetic data only (Moss HIPAA / Deepgram BAA are Enterprise-only — never real PHI on free tiers); keys are server-side (`.env.local`, gitignored), the browser only ever gets a short-lived Deepgram token; production posture = Medplum (HIPAA-eligible) as system of record, FHIR `Provenance`/`AuditEvent` for the audit trail, encryption in transit + at rest.
 - **FHIR R4 only** — LLMs hallucinate R5 fields; `CLAUDE.md` guards this. Type everything with `@medplum/fhirtypes`.
 
 ---
 
-## 9. Quickstart
+## 11. Quickstart
 
 ```bash
 pnpm install
@@ -142,7 +165,7 @@ pnpm dev                     # http://localhost:3000  →  /intake  →  "Play d
 
 Medplum bots (deploy separately, not on Vercel): `cd medplum && npx medplum bot deploy *`
 
-## 10. Repo layout
+## 12. Repo layout
 
 - `app/` — Next.js UI + API routes (Deepgram token, Moss retrieval+fallback, imaging, Stedi eligibility, Medplum write)
 - `lib/` — sponsor clients, endo/cluster criteria corpus, Thaakat prompts
