@@ -57,8 +57,15 @@ const SAMPLE_STUDIES: Record<string, ImagingResult> = {
   },
 };
 
-export async function analyzeImaging(studyId: string): Promise<ImagingResult> {
+/**
+ * Re-read a study. Returns null when we have no result for that identifier.
+ *
+ * Falling back to a default study for an unknown id is the one wrong answer here: it would
+ * narrate a uterosacral nodule for a patient whose scan we never looked at, in a product whose
+ * entire claim is that it read THIS person's imaging. An empty answer is recoverable; a
+ * confidently wrong one is not.
+ */
+export async function analyzeImaging(studyId: string): Promise<ImagingResult | null> {
   // TODO(real-model): pull DICOM from Medplum (ImagingStudy/Binary), run radiomics + classifier here.
-  const hit = SAMPLE_STUDIES[studyId] ?? SAMPLE_STUDIES['demo-pelvic-mri-1'];
-  return hit;
+  return SAMPLE_STUDIES[studyId] ?? null;
 }
