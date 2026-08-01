@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,20 @@ const TTL_SECONDS = 300;
 // Reuse a token until it's nearly expired — a page reload mid-demo shouldn't re-hit the API.
 let cached: { token: string; expiresAt: number } | null = null;
 
-export async function POST() {
+/**
+ * Is this request coming from a local dev machine?
+ *
+ * Deliberately keyed on the request HOST, not NODE_ENV. A Vercel preview deploy is a public URL
+ * that anyone with the link can open, and on some build configurations NODE_ENV is not
+ * 'production' there — so an NODE_ENV check can hand a live API key to the browser on a URL that
+ * is already shared. The host cannot lie about being localhost to a remote visitor.
+ */
+function isLocalRequest(req: NextRequest): boolean {
+  const host = (req.headers.get('host') ?? '').split(':')[0].toLowerCase();
+  return host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1';
+}
+
+export async function POST(req: NextRequest) {
   const key = process.env.DEEPGRAM_API_KEY;
   if (!key) {
     return NextResponse.json(
@@ -58,10 +71,10 @@ export async function POST() {
     // So the fallback is refused off localhost unless someone opts in deliberately. Failing loudly
     // here is recoverable (use ▶ Play demo, or set a Member-scoped key); a leaked key on a URL
     // handed to judges is not.
-    const isLocal = process.env.NODE_ENV !== 'production';
+    const isLocal = isLocalRequest(req);
     const optedIn = process.env.ALLOW_DEEPGRAM_KEY_IN_BROWSER === 'true';
     if (!isLocal && !optedIn) {
-      console.error('[deepgram] auth/grant refused (%s) and raw-key fallback is off in production.', res.status);
+      console.error('[deepgram] auth/grant refused (%s) and raw-key fallback is off for remote hosts.', res.status);
       return NextResponse.json(
         {
           error:
@@ -71,6 +84,15 @@ export async function POST() {
             'anyway, set ALLOW_DEEPGRAM_KEY_IN_BROWSER=true.',
         },
         { status: 503 },
+      );
+    }
+    if (!isLocal && optedIn) {
+      // Someone deliberately opted in on a public URL. That publishes a live credential to anyone
+      // who opens the network tab, so make it impossible to do accidentally or to forget about.
+      console.error(
+        '[deepgram] SECURITY: serving the RAW API key to a browser on a non-local host (%s) because ' +
+          'ALLOW_DEEPGRAM_KEY_IN_BROWSER=true. Rotate this key after the demo.',
+        req.headers.get('host'),
       );
     }
 
@@ -84,6 +106,9 @@ export async function POST() {
       scheme: 'token',
       expires_in: 0,
       fallback: true,
+      // True only when a live key is being served to a browser on a PUBLIC url — the client
+      // surfaces this so nobody demos in that state without knowing.
+      keyExposedPublicly: !isLocal,
       hint:
         'Using the raw API key in the browser. To mint short-lived tokens instead, create a key ' +
         'with the "Member" role at console.deepgram.com → Settings → API Keys.',

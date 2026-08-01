@@ -12,6 +12,12 @@ import { BotEvent, MedplumClient, getQuestionnaireAnswers, createReference } fro
 import type { QuestionnaireResponse, Patient, DocumentReference, Reference } from '@medplum/fhirtypes';
 import { EXTRACTION_TOOL, buildChartBundle, type ClinicalExtraction } from '../../lib/fhir/model';
 
+// The slice of Anthropic's Messages response we actually read. `fetch().json()` is `{}` — typing
+// the parse is what keeps a shape change from silently becoming "no findings extracted".
+type AnthropicToolUseResponse = {
+  content?: ({ type?: string } & { input?: Partial<ClinicalExtraction> })[];
+};
+
 export async function handler(medplum: MedplumClient, event: BotEvent<QuestionnaireResponse>): Promise<any> {
   const answers = getQuestionnaireAnswers(event.input);
   const transcript = answers['transcript']?.valueString ?? '';
@@ -66,10 +72,8 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Questionna
           },
         ],
       }),
-    }).then((r) => r.json());
-    const toolUse = (res?.content ?? []).find((c: { type?: string }) => c.type === 'tool_use') as
-      | { input?: Partial<ClinicalExtraction> }
-      | undefined;
+    }).then((r) => r.json() as Promise<AnthropicToolUseResponse>);
+    const toolUse = (res?.content ?? []).find((c) => c.type === 'tool_use');
     if (toolUse?.input?.findings?.length) {
       extraction = { ...(toolUse.input as ClinicalExtraction), transcript };
     }

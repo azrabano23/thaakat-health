@@ -28,9 +28,24 @@ Verified live: one `/api/medplum/commit` call writes **13 resources** atomically
 ## 4. Bots + Subscriptions (enabled: bots, cron, ai, ai-realtime)
 
 - **`medplum/bots/intake-to-fhir.ts`** — the same pattern on bot infra: force Claude to return `ClinicalExtraction` via `EXTRACTION_TOOL`, then `buildChartBundle` → `executeBatch`. Anthropic key is a Bot Secret.
-- **`medplum/bots/reread-on-imaging.ts`** — the closed loop: a `Subscription` (criteria `ImagingStudy`, `rest-hook` → this bot, `subscription-supported-interaction: create` to avoid loops) re-runs the radiomics read on new imaging and files an updated DetectedIssue. Bot-channel subscriptions run **once, no retry** — the bot is idempotent (`upsertResource`).
-- **`medplum/bots/eligibility.ts`** — coverage.
-- Deploy (not on Vercel — Medplum's infra): `npx medplum bot deploy *`. `$ai` is available now the `ai` feature is on, but it's OpenAI-shaped — we call Anthropic directly from the bot with a Bot Secret.
+- **`medplum/bots/reread-on-imaging.ts`** — the closed loop: a `Subscription` (criteria `ImagingStudy`, `rest-hook` → this bot, `subscription-supported-interaction: create` to avoid loops) re-runs the radiomics read on new imaging and files an updated DetectedIssue. Bot-channel subscriptions run **once, no retry**, so both writes go through `createResourceIfNoneExist` keyed on an identifier from `lib/demo-identity.ts` — the Device on `RADIOMICS_DEVICE_ID`, the finding on `rescoreIdentifier(studyId)`. Re-delivery of the same study is a no-op instead of a duplicate finding on the chart.
+- **`medplum/bots/eligibility.ts`** — coverage. Reads the payer identity off `CoverageEligibilityRequest.insurer` rather than defaulting to one payer, because the demo seeds one patient on UHC and one on Aetna. `authOrCertIndicator` is three-valued: only `Y` sets `authorizationRequired: true`, only `N` sets it false, and `U`/undetermined **omits the field** — a boolean can't say "the payer didn't tell us," and writing `false` there would claim no prior auth is needed when nobody said that.
+
+### Deploying them
+
+Bots run on Medplum's infra, not Vercel. Medplum executes **one bundled `.js` per bot**, and our bots import shared app code (`lib/fhir/model.ts`, `lib/demo-identity.ts`) so a bot and the web app write byte-identical FHIR — that import has to be inlined, which is why the build is esbuild with `bundle: true` and not plain `tsc`.
+
+```bash
+pnpm bots:typecheck   # tsc over medplum/bots + the lib/ files they import
+pnpm bots:build       # esbuild -> medplum/dist/*.js (gitignored)
+pnpm bots:deploy      # medplum bot deploy — run from medplum/, needs `medplum login` first
+```
+
+`medplum/tsconfig.bots.json` exists because the root `tsconfig.json` **excludes `medplum/bots`** — for a while that meant nothing type-checked the bots at all, and three real FHIR type errors sat there undetected (a missing required `CoverageEligibilityResponse.insurance[].coverage`, an untyped Anthropic response, and an `ImagingStudy.subject` that can be a Device being assigned to `DetectedIssue.patient`). `pnpm bots:typecheck` is what makes the "hallucinated FHIR field = compile error" guarantee actually hold for bot code.
+
+Before the first deploy, each bot needs to exist on the project and its id written into `medplum/medplum.config.json` (replacing `REPLACE_WITH_BOT_ID`) — create via `medplum bot create <name>` or the Medplum console, then `pnpm bots:deploy`. Bot Secrets to set on the project: `ANTHROPIC_API_KEY` (intake-to-fhir) and `STEDI_API_KEY` (eligibility).
+
+`$ai` is available now the `ai` feature is on, but it's OpenAI-shaped — we call Anthropic directly from the bot with a Bot Secret.
 
 ## 5. Common-mistake guardrails (followed)
 

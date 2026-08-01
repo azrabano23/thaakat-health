@@ -29,3 +29,6 @@ coverage/
 *.tsbuildinfo
 next-env.d.ts
 .env*
+
+# Bot bundles (built by pnpm bots:build, deployed via medplum CLI)
+medplum/dist/

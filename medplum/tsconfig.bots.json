@@ -1,0 +1,26 @@
+{
+  // Bots run on Medplum's Node infra, not in the browser and not on Vercel — so they get their own
+  // config instead of the Next.js one at the repo root (which pulls in DOM libs and JSX).
+  //
+  // The root tsconfig EXCLUDES medplum/bots, so `pnpm typecheck` never saw this code. `pnpm
+  // bots:typecheck` is what type-checks it — a hallucinated FHIR field in a bot is only a compile
+  // error if something actually compiles it.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true
+  },
+  // Bots import shared app code (lib/fhir/model.ts) so the bot and the web app write identical
+  // FHIR — that shared file has to be in the program too.
+  "include": ["bots/**/*.ts", "../lib/fhir/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

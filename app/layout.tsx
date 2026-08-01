@@ -35,7 +35,20 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {/*
+          Persistent on EVERY route, by design. Thaakat renders things that look exactly like a
+          clinical record — FHIR resources, a radiomics read, an insurance decision — so anyone
+          landing mid-flow (or seeing a screenshot out of context) has to be told immediately that
+          none of it is real and none of it is for care. Do not remove this, including for demos
+          and screenshots.
+        */}
+        <div role="note" className="demo-banner">
+          <strong>DEMO — synthetic data.</strong> Not for clinical use. Decision-support, not
+          diagnosis.
+        </div>
+        {children}
+      </body>
     </html>
   );
 }

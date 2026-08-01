@@ -10,7 +10,10 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "seed": "npx --yes tsx scripts/seed-fhir.ts",
-    "seed:moss": "npx --yes tsx scripts/seed-moss.ts"
+    "seed:moss": "npx --yes tsx scripts/seed-moss.ts",
+    "bots:typecheck": "tsc --noEmit -p medplum/tsconfig.bots.json",
+    "bots:build": "cd medplum && node esbuild-bots.mjs",
+    "bots:deploy": "cd medplum && medplum bot deploy"
   },
   "dependencies": {
     "@deepgram/sdk": "^5.7.0",
@@ -22,9 +25,14 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@medplum/bot-layer": "5.1.27",
+    "@medplum/cli": "5.1.27",
+    "@medplum/mock": "5.1.27",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "esbuild": "^0.28.1",
+    "fast-glob": "^3.3.3",
     "typescript": "^5.7.0"
   },
   "packageManager": "pnpm@10.33.0"

@@ -58,6 +58,7 @@ export class ThaakatVoiceClient {
       access_token?: string;
       scheme?: 'bearer' | 'token';
       fallback?: boolean;
+      keyExposedPublicly?: boolean;
       hint?: string;
       error?: string;
     };
@@ -68,6 +69,13 @@ export class ThaakatVoiceClient {
     // subprotocol fails the handshake, so follow whatever the route says it handed us.
     const scheme = tokenBody.scheme ?? 'bearer';
     if (tokenBody.fallback && tokenBody.hint) console.warn('[thaakat:voice]', tokenBody.hint);
+    // A raw key on a public URL is visible to anyone with the network tab open. A console warning
+    // is not enough — put it on screen so it can't be demoed past unnoticed.
+    if (tokenBody.keyExposedPublicly) {
+      this.events.onError?.(
+        'Warning: this deploy is sending a live Deepgram API key to the browser. Rotate the key after the demo.',
+      );
+    }
 
     // Start the mic FIRST — Settings must declare the real capture rate.
     const sampleRate = await this.mic.start((pcm) => {

@@ -785,3 +785,24 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
   .rise { opacity: 1; transform: none; }
   .contour-draw { stroke-dashoffset: 0; }
 }
+
+/* ── DEMO banner ───────────────────────────────────────────────────────────────
+   Renders on every route from app/layout.tsx. Sticky rather than fixed so it
+   never covers content, and it survives scrolling on a phone — a judge opening
+   the deployed URL mid-flow must see it without hunting.
+   Amber (--warn) rather than red: this is a standing notice, not an error, and
+   red is reserved for the clinical flag. */
+.demo-banner {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 6px 16px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: #2a1f06;
+  background: var(--warn);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.18);
+}
+.demo-banner strong { font-weight: 650; }
