@@ -62,9 +62,11 @@ export async function checkEligibility(opts: {
   const data: any = await res.json();
 
   const benefits: any[] = data.benefitsInformation ?? [];
+  // code 1 = Active Coverage, code 6 = Inactive. Do NOT test the name with /active/i — it also
+  // matches "Inactive" (the substring), which flipped the decline path to "active".
+  const inactive = benefits.some((b) => b.code === '6' || /inactive/i.test(b.name ?? ''));
   const active =
-    (data.status ?? '').toLowerCase() === 'active' ||
-    benefits.some((b) => b.code === '1' || /active/i.test(b.name ?? ''));
+    !inactive && (benefits.some((b) => b.code === '1') || (data.status ?? '').toLowerCase() === 'active');
 
   // authOrCertIndicator: Y = prior auth required, N = not, U = undetermined. Per Stedi, an ABSENT
   // indicator means auth is NOT required — so default to 'N', never a misleading "unknown".
