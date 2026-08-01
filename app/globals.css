@@ -862,14 +862,15 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
    Group shot above the two founder cards. Capped height with object-fit so a
    tall phone photo can't push the cards off the fold, and the caption carries
    the identification the photo can't. */
-.founders-photo { margin: 0 0 40px; }
+/* Capped and centred: at full shell width a 4:3 photo reads as a hero image and pushes the
+   founder cards below the fold, which inverts the emphasis of the section. */
+.founders-photo { margin: 0 auto 40px; max-width: 720px; }
 .founders-photo img {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 460px;
-  object-fit: cover;
-  object-position: center 34%; /* keeps faces in frame when the crop bites */
+  /* The source is 4:3 landscape with people at both the top and bottom edges, so it is shown
+     uncropped — a max-height + object-fit:cover would cut the seated founders' heads off. */
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   background: var(--panel-2);
