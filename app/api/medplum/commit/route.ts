@@ -14,6 +14,7 @@ export async function POST(req: NextRequest) {
       priorAuthRequired: body.priorAuthRequired,
       patientName: body.patientName,
       patientId: body.patientId,
+      cluster: body.cluster, // the assembled cross-specialty pattern -> DetectedIssue (the marquee write)
     });
     return NextResponse.json(result);
   } catch (e) {
