@@ -70,7 +70,7 @@ const SPONSOR_RUN = [
     tool: 'Claude + radiomics',
     role: 'The reasoning & the moat',
     body: 'Claude is the reasoning layer: it assembles the cross-specialty cluster and extracts the transcript into a structured, coded FHIR record (forced tool-use, so it fills our schema instead of freelancing). The radiomics model is the moat Claude can’t hand another team — a real classifier that re-reads the under-read scan for the deep-infiltrating and adenomyosis signs a routine read skips.',
-    proof: 'AUC 0.966',
+    proof: 'AUC 0.9663',
   },
   {
     n: '04',
@@ -500,13 +500,15 @@ export default function Home() {
             <figure className="founders-photo">
               <img
                 src="/founders/thaakat-founders-yc.jpg"
-                alt="Azra Bano and Nityanth Maramreddy with their team at the Y Combinator sign in San Francisco."
+                alt="Azra Bano and Nityanth Maramreddy with teammates at the Y Combinator sign in San Francisco."
+                width={1320}
+                height={978}
                 loading="lazy"
                 decoding="async"
               />
               <figcaption>
-                At Y&nbsp;Combinator, San Francisco. <strong>Azra</strong> seated at left,{' '}
-                <strong>Nitu</strong> standing at right.
+                At Y&nbsp;Combinator, San Francisco. <strong>Azra</strong> seated at lower left,{' '}
+                <strong>Nitu</strong> standing behind the sign at right.
               </figcaption>
             </figure>
 
