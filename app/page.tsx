@@ -500,13 +500,15 @@ export default function Home() {
             <figure className="founders-photo">
               <img
                 src="/founders/thaakat-founders-yc.jpg"
-                alt="Azra Bano and Nityanth Maramreddy with their team at the Y Combinator sign in San Francisco."
+                alt="Azra Bano and Nityanth Maramreddy with teammates at the Y Combinator sign in San Francisco."
+                width={1320}
+                height={978}
                 loading="lazy"
                 decoding="async"
               />
               <figcaption>
-                At Y&nbsp;Combinator, San Francisco. <strong>Azra</strong> seated at left,{' '}
-                <strong>Nitu</strong> standing at right.
+                At Y&nbsp;Combinator, San Francisco. <strong>Azra</strong> seated at lower left,{' '}
+                <strong>Nitu</strong> standing behind the sign at right.
               </figcaption>
             </figure>
 
