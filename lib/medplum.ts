@@ -25,7 +25,12 @@ export async function getMedplum(): Promise<MedplumClient | null> {
   if (!clientId || !clientSecret) return null;
   if (cached) return cached;
   const medplum = new MedplumClient({ baseUrl, fetch });
-  await medplum.startClientLogin(clientId, clientSecret);
+  try {
+    await medplum.startClientLogin(clientId, clientSecret);
+  } catch (e) {
+    console.warn('[medplum] client login failed — falling back to dry-run:', (e as Error).message);
+    return null;
+  }
   cached = medplum;
   return medplum;
 }

@@ -221,7 +221,7 @@ export default function Intake() {
               )}
               {committed && (
                 <p className="muted" style={{ fontSize: 11, marginBottom: 0 }}>
-                  {committed.dryRun ? committed.note : `Wrote ${Object.keys(committed.ids).length} FHIR resources (incl. DetectedIssue) to Medplum.`}
+                  {committed.error ? 'Medplum write skipped — check credentials.' : committed.dryRun ? committed.note : `Wrote ${Object.keys(committed.ids || {}).length} FHIR resources (incl. DetectedIssue) to Medplum.`}
                 </p>
               )}
             </div>
