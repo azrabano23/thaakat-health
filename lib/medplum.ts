@@ -10,6 +10,7 @@ import type {
   Observation,
   ServiceRequest,
   DiagnosticReport,
+  DetectedIssue,
   Claim,
   Task,
 } from '@medplum/fhirtypes';
@@ -35,6 +36,7 @@ export type ChartInput = {
   imagingFindings?: string[]; // radiomics narration lines
   referral?: { specialty: string; imaging?: string; cptCode?: string };
   priorAuthRequired?: boolean;
+  cluster?: { name: string; ask: string; confidence: number }; // the assembled pattern -> DetectedIssue
 };
 
 // Writes the whole picture as a transaction. Returns created resource ids (or a dry-run echo).
@@ -83,6 +85,19 @@ export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean;
     subject,
   });
   ids['Condition'] = condition.id!;
+
+  // the assembled cross-specialty pattern -> DetectedIssue ("nobody's job was to see this")
+  if (input.cluster) {
+    const issue = await medplum.createResource<DetectedIssue>({
+      resourceType: 'DetectedIssue',
+      status: 'preliminary',
+      severity: 'moderate',
+      code: { text: input.cluster.name },
+      detail: input.cluster.ask,
+      patient: subject,
+    });
+    ids['DetectedIssue'] = issue.id!;
+  }
 
   // radiomics report
   if (input.imagingFindings?.length) {

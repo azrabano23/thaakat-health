@@ -3,7 +3,7 @@
 You are helping build **Noor**, a voice-first, multimodal diagnostic navigator for women's health (endometriosis-first), for the **YC × Medplum Agentic Healthcare Hackathon**. Read [`docs/TEAMMATE_BRIEF.md`](docs/TEAMMATE_BRIEF.md) for the full why/what and [`docs/BUILD_KIT.md`](docs/BUILD_KIT.md) for the build plan before making changes in an area.
 
 ## What we're building (context)
-Voice (Deepgram) → agent brain (Claude) → real-time retrieval (Moss, <10ms) → FHIR + bots (Medplum) → coverage (Stedi). The **moat is the imaging/radiomics step**, not the voice. Voice is the sensor that captures the symptom narrative; the radiomics layer reads the scan; Medplum is the system of record; Stedi checks coverage. Keep all four sponsors load-bearing.
+Noor assembles a woman's WHOLE longitudinal record across specialists, **re-reads the under-read scan**, and surfaces the pattern nobody assembled. Flow: Deepgram voice → Claude brain → Moss (<10ms retrieval over the whole record) → **cluster engine (`lib/clusters.ts`)** → Medplum (`DetectedIssue` + Dossier FHIR) → Stedi (coverage). The **moat is the imaging/radiomics re-read + the record assembly**; voice is the sensor. **Decision-support, never diagnosis.** Keep all four sponsors load-bearing. The demo lives in `app/intake/page.tsx` (scripted → swap in live voice).
 
 ## Golden rules
 - **FHIR R4 only.** Type every FHIR object with `@medplum/fhirtypes`. Do **not** invent fields, search params, or operations — LLMs routinely blend in R5/deprecated fields; that's a silent bug. If unsure, check the Medplum docs before writing.

@@ -20,16 +20,18 @@ Everything you need to go from clone → working demo in one day. Read [`TEAMMAT
 Browser (Next.js/Vercel)  ──►  Deepgram Voice Agent (STT+TTS, think=Claude)
         │                              │ function calls
         │  every turn (retrieval-heavy)▼
-        ├──►  Moss  <10ms  ── criteria + patient history      (/api/moss/query, local fallback)
-        ├──►  Radiomics  ── reads the scan (THE MOAT)          (/api/imaging/analyze)
-        ├──►  Medplum  ── Bots write FHIR chart + referral     (/api/medplum/commit + bots/)
+        ├──►  Moss  <10ms  ── retrieve over the WHOLE record   (/api/moss/query, local fallback)
+        ├──►  Radiomics  ── re-reads the under-read scan (MOAT) (/api/imaging/analyze)
+        ├──►  Cluster engine ── assemble findings → match      (lib/clusters.ts)
+        ├──►  Medplum  ── DetectedIssue + Dossier + referral   (/api/medplum/commit + bots/)
         └──►  Stedi  ── real-time eligibility (test mode)      (/api/eligibility)
 ```
 
 What's already scaffolded in this repo:
-- `app/intake` — the live demo UI (scripted flow → swap in live voice).
-- `app/api/*` — working routes for Deepgram token, Moss retrieval (+fallback), imaging (stub), Stedi eligibility, Medplum write.
-- `lib/*` — sponsor clients + the endo criteria corpus + prompts.
+- `app/intake` — the **record-assembly demo**: records connect → timeline assembles live → chart-aware Q → radiomics re-reads the under-read MRI → cluster lights up → Dossier / The Ask / The Cost.
+- `app/api/*` — working routes: Deepgram token, Moss retrieval (+local fallback), imaging (radiomics stub), Stedi eligibility (test mode), Medplum write (DetectedIssue + chart + referral + PA).
+- `lib/clusters.ts` — **the cluster engine**: the pre-seeded longitudinal record + 3 cluster definitions (endo / Sjögren's / celiac) + a transparent matcher.
+- `lib/*` — sponsor clients + endo/imaging criteria corpus (Moss) + Noor prompts.
 - `medplum/bots/*` — the two Bots (intake→FHIR via Claude, eligibility via Stedi).
 
 ---
@@ -41,22 +43,26 @@ What's already scaffolded in this repo:
 - Define the agent's **client-side functions** (`retrieve_criteria`, `analyze_imaging`, `check_eligibility`, `commit_chart`) that call our API routes.
 - Make retrieval **heavy**: fire several Moss lookups per turn (symptoms + history + imaging signals). Surface the `retrieval Nms` badge — it's the Moss+Deepgram co-dependency story.
 
-**Person B — FHIR + Coverage + Imaging (the "record" + the moat):**
-- Deploy the Medplum **Bots**; seed a synthetic patient + a `Coverage`. Verify `/api/medplum/commit` writes real resources (check the Medplum app).
-- Wire **Stedi** test-mode eligibility for real; confirm `authOrCertIndicator` reads correctly; build the "covered / $X / prior-auth started" panel.
-- Own the **imaging panel**: display a sample pelvic MRI with the radiomics overlay (regions from `lib/imaging.ts`). If Azra can drop in a real feature-extraction step, wire it behind `/api/imaging/analyze`; otherwise the curated findings are demo-ready. Frame as decision-support.
+**Person B — Record + Cluster + Coverage + Imaging (the "moat" + output):**
+- Own the **cluster engine** (`lib/clusters.ts`): tune the seeded record + the 3 cluster definitions so endo lights up cleanly and the others stay quiet (specificity is the demo).
+- Own the **imaging re-read**: sample pelvic MRI + radiomics overlay (`lib/imaging.ts`). If Azra drops in a real feature-extraction step, wire it behind `/api/imaging/analyze`; else the curated findings are demo-ready. Frame as decision-support.
+- Deploy the Medplum **Bots**; verify `/api/medplum/commit` writes real resources incl. the **`DetectedIssue`** (check the Medplum app). Add `Provenance` links per finding if time allows.
+- Wire **Stedi** test-mode eligibility for real; confirm `authOrCertIndicator`; build the "The Cost" panel.
+- Own the **timeline-assembles** UI polish — that live build is the hero visual.
 
 Converge by ~3pm on one clean end-to-end run. Record the video early.
 
 ---
 
-## The demo (2 minutes, the winning run)
+## The demo (2–3 minutes, the winning run)
 
-1. **Cold open (10s):** "Endometriosis takes 7–10 years to diagnose. Meet Noor." Open `/intake`.
-2. **Voice interview (40s):** patient describes pelvic pain → Noor **adapts live**, pulling the next question from criteria via Moss (<10ms — point at the latency badge). The clinical picture fills in on screen.
-3. **The scan — THE moment (30s):** "I had an MRI, they said it was normal." → Noor reads it and the overlay lights up: *"I'm seeing signs consistent with deep infiltrating endometriosis that routine reads miss."* Let it land.
-4. **Clear the path (25s):** Noor checks coverage via Stedi live — "covered, ~$210, and I've started your prior auth" — and the FHIR chart + referral + PA Task populate in Medplum.
-5. **Close (15s):** "Seven to ten years… in one conversation. Noor brings what's hidden into the light." → founder line: *"I did the radiomics research on this. I know why women wait a decade — and I built the fix."*
+1. **Cold open (15s):** "A woman saw 5 doctors over 3 years. Every one did their job. Nobody's job was to read it all together." Open `/intake`, hit Play.
+2. **Records assemble (25s):** Maria's record connects "via the patient-access APIs" and a **timeline assembles itself** — GP 2022, GI 2023, an *unremarkable* ultrasound, an **orphaned CA-125 nobody followed up**, an MRI called normal. Let the judges watch it build.
+3. **Chart-aware interview (25s):** Noor asks about *her actual record* ("I see a CA-125 that was never followed up…") — Moss retrieved over the whole record in <10ms (point at the badge). She mentions pain during sex; it lands on the timeline.
+4. **The imaging moment — THE gasp (30s):** "That MRI they called normal — let me look myself." → the **radiomics re-read lights up a deep-infiltrating-endometriosis nodule** and drops onto the timeline as *surfaced by Noor*.
+5. **The pattern nobody assembled (20s):** the **cluster card lights up** — Endometriosis pattern, XX% match — with **The Ask** (a question for the clinician, never a diagnosis) and **The Cost** (live Stedi: covered, ~$210, prior auth started). FHIR incl. a `DetectedIssue` writes to Medplum.
+6. **Close (20s):** "Reading a whole chart used to cost a physician-hour, so it was nobody's job. It now costs forty cents — and Noor caught the scan they missed." → founder line: *"I did the radiomics research on this. I know why women wait a decade — and I built the fix."*
+7. **The "only endo?" back-pocket:** flip to `lib/clusters.ts`, show the Sjögren's + celiac definitions matching. 10 seconds = "system, not hardcoded."
 
 **Demo-hardening:** rehearse with the exact Stedi test values (`docs/SPONSORS.md`); keep the local Moss fallback on so retrieval can't fail; pre-load the sample MRI; have the `UHCINACTIVE` decline path ready as an "intentional" negative case.
 
@@ -66,7 +72,7 @@ Converge by ~3pm on one clean end-to-end run. Record the video early.
 
 - **Team name:** _(yours)_
 - **Hack name + tagline:** **Noor — bringing what's hidden into the light. A voice-first diagnostic navigator that reads your scan and turns the 7–10 year endometriosis odyssey into one conversation.**
-- **Problem:** Endometriosis takes women 7–10 years and 7+ doctors to diagnose. The signal is lost twice — in a spoken story that forms and rushed visits can't capture, and in imaging where the signs are routinely missed. Noor recovers both.
+- **Problem:** Diagnostic delay is a *structural* failure — the clues are already documented across specialists, but nobody's job is to read them together, and the confirming sign is often in a scan that was under-read. Noor assembles the whole record and re-reads the imaging, turning a 7–10 year odyssey (endometriosis first) into one conversation.
 - **How we used each sponsor:**
   - **Deepgram** — Voice Agent API (Flux STT + Aura TTS + barge-in, Claude as the think model) runs the adaptive clinical interview that captures the narrative. Voice is the *sensor*, not a wrapper.
   - **Moss** — retrieval-heavy: every turn we do multiple <10ms lookups (diagnostic criteria + patient history) so the interview branches like a specialist with zero dead air.
