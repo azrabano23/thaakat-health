@@ -73,8 +73,9 @@ export async function checkEligibility(opts: {
 
   return {
     active,
-    // planCoverage is not a field in the 271 schema — read the real top-level plan info.
-    planName: data.planInformation?.planName ?? data.planStatus?.[0]?.planDetails,
+    // benefitsInformation[].planCoverage IS a real 271 field — the plan/product name (e.g. "Gold
+    // 1-2-3"), sent when code is 1–8 and STC 30 is present. Fall back to the plan-info object.
+    planName: benefits.find((b) => b.planCoverage)?.planCoverage ?? data.planInformation?.planName,
     copay: copayObj?.benefitAmount,
     deductible: dedObj?.benefitAmount,
     priorAuthRequired: authFlag as EligibilityResult['priorAuthRequired'],
