@@ -467,12 +467,12 @@ export default function Home() {
               <span className="label-sig">On HIPAA, honestly</span>
               <h3>The technical safeguards are built. The paperwork is what a pilot buys.</h3>
               <p style={{ maxWidth: '76ch' }}>
-                HIPAA attaches to protected health information, and this demo has none — every patient is synthetic. So
-                the useful question isn&apos;t whether a hackathon build is compliant; it&apos;s whether it was built so
-                that it <em>could</em> be. Encryption in transit and at rest, no keys in the browser, a real audit trail,
-                and minimum-necessary access are all here now. What a first clinical pilot adds is contractual, not
-                architectural: <strong>Business Associate Agreements</strong> with each vendor in the path, and the
-                enterprise tiers that sign them.
+                Compliance is usually retrofitted onto a product that was built without it, which is why it takes so
+                long. We went the other way: the safeguards HIPAA asks for are already in the architecture. Encryption
+                in transit and at rest, no keys in the browser, a real audit trail, and minimum-necessary access are all
+                here now. What a first clinical pilot adds is contractual, not architectural:{' '}
+                <strong>Business Associate Agreements</strong> with each vendor in the path, and the enterprise tiers
+                that sign them.
               </p>
             </div>
           </div>
