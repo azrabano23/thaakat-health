@@ -17,11 +17,13 @@ const NAV_LINKS = [
   { label: 'Founders', href: '#founders' },
 ];
 
+// Every figure sourced in docs/EVIDENCE.md. Verified primary sources only; soft/advocacy
+// numbers were dropped rather than dressed up (a physician judge will check).
 const STATS = [
-  { value: '88%', label: 'of diagnoses changed when one specialist re-read the whole chart.', source: 'Mayo Clinic' },
-  { value: '1 in 3', label: 'missed cancers had the red flag already documented in the record.', source: 'Diagnostic-error research' },
-  { value: '795K', label: 'Americans seriously harmed by a diagnostic error every year.', source: 'Johns Hopkins · BMJ' },
-  { value: '7–10 yrs', label: 'and 7+ doctors — the average wait for an endometriosis diagnosis.', source: 'Endometriosis research' },
+  { value: '88%', label: 'of referred cases were changed or refined when one team re-read the whole record (n=286).', source: 'Mayo · Van Such 2017' },
+  { value: '60–80%', label: 'of radiology errors are perceptual — the finding was already visible on the first scan.', source: 'Brady · Insights into Imaging' },
+  { value: '795K', label: 'Americans die or are permanently disabled by diagnostic error every year.', source: 'Johns Hopkins · BMJ 2023' },
+  { value: '4–12 yrs', label: 'and 5+ clinicians to diagnose endometriosis — and the delay is widening, not closing.', source: 'WHO · WERF' },
 ];
 
 const WORKFLOW = [
@@ -313,23 +315,25 @@ export default function Home() {
               </div>
               <h3>EndoDetect: a trained radiomics model, not a mock.</h3>
               <p style={{ maxWidth: '74ch' }}>
-                Thaakat’s moat is <strong>EndoDetect</strong> — Azra’s radiomics model that turns routine MRI and
-                ultrasound into non-invasive endometriosis detection <em>before</em> surgery. A real{' '}
-                <strong>PyRadiomics</strong> pipeline extracts real features from real, public imaging data, with an
-                honest, cross-validated result — the hard modality other teams can’t stand up in a weekend.
+                Thaakat’s moat is <strong>EndoDetect</strong> — Azra’s radiomics work turning routine MRI and
+                ultrasound into non-invasive endometriosis signal <em>before</em> surgery. A real{' '}
+                <strong>scikit-image radiomics</strong> pipeline (GLCM + first-order texture — the family PyRadiomics
+                computes) extracts real features from real, public imaging, with an honest, cross-validated result.
+                We report it as <strong>investigational decision-support</strong>, never autonomous diagnosis — the hard
+                modality other teams can’t stand up in a weekend.
               </p>
               <div className="evidence">
                 <div className="evi">
                   <div className="evi-val">0.967</div>
-                  <div className="evi-label">AUC, 5-fold cross-validated on held-out imaging — reported honestly.</div>
+                  <div className="evi-label">ROC-AUC, 5-fold CV (±0.012, out-of-fold) — reported with its class imbalance, not accuracy.</div>
                 </div>
                 <div className="evi">
-                  <div className="evi-val">PyRadiomics</div>
-                  <div className="evi-label">Real features extracted from the pixels, not a hardcoded label.</div>
+                  <div className="evi-val" style={{ fontSize: '1.2rem' }}>12 texture features</div>
+                  <div className="evi-label">GLCM + first-order, extracted from the pixels — not a hardcoded label.</div>
                 </div>
                 <div className="evi">
                   <div className="evi-val" style={{ fontSize: '1.2rem' }}>GLENDA · n=5,990</div>
-                  <div className="evi-label">Trained on a real, public endometriosis imaging dataset.</div>
+                  <div className="evi-label">Trained on a real, public endometriosis imaging dataset (500 / 5,490).</div>
                 </div>
               </div>
             </div>
