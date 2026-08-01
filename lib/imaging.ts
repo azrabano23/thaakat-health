@@ -3,6 +3,8 @@
 // return findings + overlay regions. For the hackathon we return curated, believable findings for
 // known sample studies so the demo is reliable. Frame as detection/decision-support, never diagnosis.
 
+import RADIOMICS_MODEL from '@/lib/radiomics-model.json';
+
 export type ImagingFinding = {
   label: string;
   /** Plain-language wording for the patient conversation. */
@@ -34,7 +36,9 @@ const SAMPLE_STUDIES: Record<string, ImagingResult> = {
     model: {
       name: 'Radiomic texture classifier (first-order + GLCM)',
       trainedOn: 'GLENDA — real endometriosis imaging (n=5,990)',
-      cvAuc: '0.967 (5-fold CV ROC-AUC)',
+      // Read from the trained model's own artifact rather than retyped, so this card and the
+      // ModelCard (which renders the same file) can never quote different numbers on stage.
+      cvAuc: `${RADIOMICS_MODEL.roc_auc.toFixed(4)} (pooled out-of-fold ROC-AUC, 5-fold CV)`,
       topFeatures: ['fo_entropy', 'glcm_homogeneity', 'fo_p10'],
     },
     summary:
