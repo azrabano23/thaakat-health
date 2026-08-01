@@ -3,17 +3,12 @@
 // Demonstrates FHIR breadth judges care about: Patient, Coverage, Encounter (5 specialties),
 // Observation (incl. the orphaned CA-125), DiagnosticReport + ImagingStudy (the under-read MRI),
 // and Provenance. Synthetic data only.
-import { readFileSync } from 'node:fs';
 import { MedplumClient, createReference } from '@medplum/core';
 import type { Bundle } from '@medplum/fhirtypes';
+import { loadEnv } from './env';
 
-// tiny .env.local loader (avoids a dotenv dependency)
-try {
-  for (const line of readFileSync('.env.local', 'utf8').split('\n')) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
-    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
-  }
-} catch { /* no .env.local — rely on real env */ }
+// Reads .env then .env.local, ignoring empty values — see scripts/env.ts for why that matters.
+loadEnv();
 
 const baseUrl = process.env.NEXT_PUBLIC_MEDPLUM_BASE_URL ?? 'https://api.medplum.com/';
 const id = process.env.MEDPLUM_CLIENT_ID;

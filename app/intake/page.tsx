@@ -1,180 +1,250 @@
 'use client';
 
+// Two ways to run the same demo, through the same engines and the same cards:
+//   🎙️ Talk to Thaakat — the live Deepgram Voice Agent (app/intake/LiveVoice.tsx)
+//   ▶ Play demo        — a scripted run, kept as the on-stage fallback if wifi eats the socket
+//
+// Both drive lib/clusters.ts, /api/moss/query, /api/imaging/analyze, /api/eligibility and
+// /api/medplum/commit. Decision-support / navigation — never diagnosis. Synthetic data only.
+
 import { useRef, useState } from 'react';
-import { SEEDED_RECORD, matchClusters, type Finding, type ClusterMatch } from '@/lib/clusters';
-import { useVoiceAgent } from '@/lib/useVoiceAgent';
-import { THAAKAT_SYSTEM_PROMPT } from '@/lib/prompts';
+import {
+  DEMO_PATIENTS,
+  getPatient,
+  matchClusters,
+  mentionOf,
+  type Finding,
+  type ClusterMatch,
+} from '@/lib/clusters';
+import type { ContextDoc } from '@/lib/moss';
+import LiveVoice from './LiveVoice';
 
 type Turn = { role: 'patient' | 'thaakat'; text: string };
+type Coverage = { active?: boolean; planName?: string; copay?: string; priorAuthRequired?: string; error?: string };
+type Committed = { dryRun?: boolean; ids?: Record<string, string>; note?: string; error?: string };
+type Retrieval = { ms: number; backend: string };
 
-// Scripted so the repo is instantly demoable. The teammate wires the REAL Deepgram Voice Agent
-// (see docs/BUILD_KIT.md) — it calls the same /api routes and the same lib/clusters engine.
 export default function Intake() {
+  const [patientId, setPatientId] = useState('maria');
   const [record, setRecord] = useState<Finding[]>([]);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [match, setMatch] = useState<ClusterMatch | null>(null);
-  const [coverage, setCoverage] = useState<any | null>(null);
-  const [committed, setCommitted] = useState<any | null>(null);
+  const [coverage, setCoverage] = useState<Coverage | null>(null);
+  const [committed, setCommitted] = useState<Committed | null>(null);
   const [phase, setPhase] = useState<'idle' | 'connecting' | 'interview' | 'reading' | 'assembled'>('idle');
-  const [mossMs, setMossMs] = useState<number | null>(null);
+  const [retrieval, setRetrieval] = useState<Retrieval | null>(null);
   const [running, setRunning] = useState(false);
 
+  const patient = getPatient(patientId);
   const say = (role: Turn['role'], text: string) => setTurns((t) => [...t, { role, text }]);
 
-  // ── live Deepgram voice loop (real): the agent drives the flow via these function calls ──
-  const recRef = useRef<Finding[]>([]);
-  const FUNCTIONS = [
-    { name: 'retrieve_criteria', description: 'Retrieve diagnostic criteria + prior findings relevant to what the patient just said.', parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] } },
-    { name: 'analyze_imaging', description: "Re-read the patient's prior pelvic MRI with the radiomics model.", parameters: { type: 'object', properties: {} } },
-    { name: 'check_eligibility', description: 'Check coverage + cost for the recommended imaging/specialist.', parameters: { type: 'object', properties: {} } },
-    { name: 'commit_chart', description: 'Write the assembled findings, referral, and question to the record.', parameters: { type: 'object', properties: {} } },
-  ];
-
-  async function handleFunction(name: string, args: any) {
-    if (name === 'retrieve_criteria') {
-      const r = await fetch('/api/moss/query', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: args?.query ?? '', topK: 4 }) }).then((x) => x.json());
-      setMossMs(r.ms ?? null);
-      return { criteria: r.results };
-    }
-    if (name === 'analyze_imaging') {
-      const img = await fetch('/api/imaging/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ studyId: 'demo-pelvic-mri-1' }) }).then((x) => x.json());
-      const f: Finding = { id: 'radiomics', label: 'MRI re-read: deep infiltrating endometriosis', detail: img.summary, specialty: 'Thaakat radiomics', date: '2024-06', source: 'Radiomic classifier — 0.967 AUC (5-fold CV) on real GLENDA endometriosis data', tags: ['die-imaging'], fromImaging: true };
-      setRecord((prev) => { const n = [...prev, f]; recRef.current = n; setMatch(matchClusters(n)[0] ?? null); return n; });
-      return img;
-    }
-    if (name === 'check_eligibility') {
-      const cov = await fetch('/api/eligibility', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ patient: 'aetna' }) }).then((x) => x.json());
-      setCoverage(cov);
-      return cov;
-    }
-    if (name === 'commit_chart') {
-      const top = matchClusters(recRef.current)[0] ?? null;
-      const commit = await fetch('/api/medplum/commit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ symptoms: recRef.current.filter((f) => f.specialty.startsWith('Patient')).map((f) => f.detail), referral: top ? { specialty: 'Gyn / endometriosis specialist', imaging: top.cluster.confirmatory.name, cptCode: top.cluster.confirmatory.cptCode } : undefined, cluster: top ? { name: top.cluster.name, ask: top.cluster.ask, confidence: top.confidence } : undefined, patientName: { given: 'Maria', family: 'Doe' } }) }).then((x) => x.json());
-      setCommitted(commit);
-      return commit;
-    }
-    return { ok: true };
+  function reset() {
+    setRecord([]);
+    setTurns([]);
+    setMatch(null);
+    setCoverage(null);
+    setCommitted(null);
+    setRetrieval(null);
+    setPhase('idle');
   }
 
-  const voice = useVoiceAgent({
-    systemPrompt: THAAKAT_SYSTEM_PROMPT + "\n\nThe patient's prior records are already loaded. Ask about the orphaned CA-125 and the pelvic MRI that was read as normal. Call analyze_imaging when she mentions the MRI, retrieve_criteria as you go, then check_eligibility and commit_chart to finish. If you're ever unsure, or a finding is high-acuity, say so plainly and flag it for a human clinician to review — never guess. Keep every turn to one short spoken sentence.",
-    greeting: "Hi, I'm Thaakat. I've pulled your records together across your doctors. Take your time — tell me what's been going on.",
-    functions: FUNCTIONS,
-    onTranscript: say,
-    onFunctionCall: handleFunction,
-  });
+  // ── the live call drives the exact same cards through these callbacks ──
+  const liveRecord = useRef<Finding[]>([]);
+  const liveHandlers = {
+    onTurn: say,
+    onFinding: (f: Finding) =>
+      setRecord((prev) => {
+        const next = [...prev, f];
+        liveRecord.current = next;
+        return next;
+      }),
+    onCluster: setMatch,
+    onCoverage: (c: Coverage) => setCoverage(c),
+    onCommit: (c: unknown) => setCommitted(c as Committed),
+    onRetrieval: (ms: number, backend: string) => setRetrieval({ ms, backend }),
+    onPhase: (p: 'interview' | 'reading' | 'assembled') => setPhase(p),
+  };
 
-  async function goLive() {
-    setTurns([]); setMatch(null); setCoverage(null); setCommitted(null);
-    recRef.current = [...SEEDED_RECORD];
-    setRecord([...SEEDED_RECORD]);
-    setPhase('interview');
-    voice.start();
-  }
-
+  // ── the scripted run ──
   async function simulate() {
     setRunning(true);
-    setRecord([]); setTurns([]); setMatch(null); setCoverage(null); setCommitted(null);
+    reset();
     const rec: Finding[] = [];
-    const push = (f: Finding) => { rec.push(f); setRecord([...rec]); };
+    const push = (f: Finding) => {
+      rec.push(f);
+      setRecord([...rec]);
+    };
 
     // 1) connect records
     setPhase('connecting');
-    say('thaakat', "Hi, I'm Thaakat. I've pulled your records together across your doctors — take your time and tell me what's been going on.");
-    for (const f of SEEDED_RECORD) { await wait(500); push(f); }
+    say(
+      'thaakat',
+      "Hi, I'm Thaakat. I've pulled your records together across your doctors — take your time and tell me what's been going on.",
+    );
+    for (const f of patient.record) {
+      await wait(450);
+      push(f);
+    }
 
-    // 2) chart-aware question (Moss retrieves over the whole record <10ms)
+    // 2) the chart-aware question. What gets cited is assembled from what retrieval actually
+    //    returned over HER record — not a hardcoded sentence about a CA-125.
     setPhase('interview');
-    await wait(500);
+    await wait(400);
     const r = await fetch('/api/moss/query', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: 'cyclical pelvic pain elevated CA-125 unremarkable ultrasound', topK: 4 }),
-    }).then((x) => x.json()).catch(() => ({}));
-    setMossMs(r.ms ?? null);
-    say('thaakat', "I can see a CA-125 from 2024 that came back high and was never followed up, plus a pelvic ultrasound read as normal. When is the pain at its worst — and does it ever hurt during sex?");
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query: patient.retrievalQuery, patientId: patient.id, topK: 6 }),
+    })
+      .then((x) => x.json())
+      .catch(() => null);
 
-    await wait(700);
-    say('patient', "It's worst right before my period. And yeah… it really hurts during sex. Five doctors told me it was normal.");
-    push({
-      id: 'pt-today', label: 'Pain during sex + cyclical (today)',
-      detail: 'Patient-reported: deep dyspareunia, pain worst premenstrually, misses work. Dismissed by prior clinicians.',
-      specialty: 'Patient (today)', date: '2025-08', source: 'Thaakat voice intake',
-      tags: ['dyspareunia', 'pelvic-pain', 'severity'],
-    });
+    if (r?.ms != null) setRetrieval({ ms: r.ms, backend: r.backend });
+    const cited = ((r?.results ?? []) as ContextDoc[])
+      .filter((d): d is Extract<ContextDoc, { kind: 'record' }> => d.kind === 'record')
+      .slice(0, 2)
+      .map((d) => mentionOf(d.finding));
+    say(
+      'thaakat',
+      cited.length
+        ? `I can see ${cited.join(', and ')}. ${patient.question}`
+        : patient.question,
+    );
 
-    // 3) the imaging moment — re-read the under-read MRI (THE MOAT)
-    setPhase('reading');
-    await wait(700);
-    say('thaakat', 'You mentioned an MRI they called normal. Let me look at it myself.');
-    const img = await fetch('/api/imaging/analyze', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ studyId: 'demo-pelvic-mri-1' }),
-    }).then((x) => x.json()).catch(() => null);
-    await wait(500);
-    if (img?.findings?.length) {
-      for (const f of img.findings) say('thaakat', f.narration);
-      push({
-        id: 'radiomics', label: 'MRI re-read: deep infiltrating endometriosis',
-        detail: img.summary, specialty: 'Thaakat radiomics', date: '2024-06',
-        source: 'Radiomic classifier — 0.967 AUC (5-fold CV) on real GLENDA endometriosis data', tags: ['die-imaging'], fromImaging: true,
-      });
+    await wait(650);
+    say('patient', patient.reply);
+    push(patient.reported);
+
+    // 3) the imaging moment — re-read the under-read scan (THE MOAT). Only for a patient who
+    //    actually has one on file; Dana's run is pure record assembly, which is the honest version.
+    let img: { summary?: string; findings?: { narration: string }[] } | null = null;
+    if (patient.imaging) {
+      setPhase('reading');
+      await wait(600);
+      say('thaakat', patient.imaging.intro);
+      img = await fetch('/api/imaging/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studyId: patient.imaging.studyId }),
+      })
+        .then((x) => x.json())
+        .catch(() => null);
+      await wait(450);
+      if (img?.findings?.length) {
+        for (const f of img.findings) say('thaakat', f.narration);
+        push({
+          id: 'radiomics',
+          label: patient.imaging.label,
+          detail: img.summary ?? '',
+          specialty: patient.imaging.specialty,
+          date: patient.imaging.date,
+          source: patient.imaging.source,
+          tags: patient.imaging.tags,
+          fromImaging: true,
+        });
+      }
     }
 
     // 4) assemble the cluster
-    const matches = matchClusters(rec);
-    const top = matches[0] ?? null;
+    const top = matchClusters(rec)[0] ?? null;
     setMatch(top);
     setPhase('assembled');
-    await wait(500);
+    await wait(450);
     if (top) say('thaakat', top.cluster.narration);
 
     // 5) The Cost — live Stedi eligibility for the confirmatory step
-    const cov = await fetch('/api/eligibility', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ patient: 'aetna' }),
-    }).then((x) => x.json()).catch(() => null);
+    const cov: Coverage | null = await fetch('/api/eligibility', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patient: patient.payer, serviceTypeCodes: top?.cluster.confirmatory.serviceTypeCodes }),
+    })
+      .then((x) => x.json())
+      .catch(() => ({ error: 'unreachable' }));
     setCoverage(cov);
     const pa = cov?.priorAuthRequired === 'Y';
-    if (top) {
-      say('thaakat', `The next step I'd suggest — ${top.cluster.confirmatory.name} — is covered${cov?.copay ? `, about $${cov.copay} out of pocket` : ''}${pa ? ", and it needs prior authorization, which I've started." : '.'}`);
+    if (top && cov && !cov.error) {
+      say(
+        'thaakat',
+        `The next step I'd suggest — ${top.cluster.confirmatory.name} — is covered${
+          cov.copay ? `, about $${cov.copay} out of pocket` : ''
+        }${pa ? ", and it needs prior authorization, which I've started." : '.'}`,
+      );
     }
 
     // 6) write it to Medplum (DetectedIssue + Dossier + referral + PA)
-    const commit = await fetch('/api/medplum/commit', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    const commit: Committed = await fetch('/api/medplum/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         symptoms: rec.filter((f) => f.specialty.startsWith('Patient')).map((f) => f.detail),
-        imagingFindings: img?.findings?.map((f: any) => f.narration),
-        referral: top ? { specialty: 'Gyn / endometriosis specialist', imaging: top.cluster.confirmatory.name, cptCode: top.cluster.confirmatory.cptCode } : undefined,
+        imagingFindings: img?.findings?.map((f) => f.narration),
+        referral: top
+          ? {
+              specialty: 'Gyn / endometriosis specialist',
+              imaging: top.cluster.confirmatory.name,
+              cptCode: top.cluster.confirmatory.cptCode,
+            }
+          : undefined,
         priorAuthRequired: pa,
         cluster: top ? { name: top.cluster.name, ask: top.cluster.ask, confidence: top.confidence } : undefined,
-        patientName: { given: 'Maria', family: 'Doe' },
+        patientName: patient.name,
       }),
-    }).then((x) => x.json()).catch(() => null);
+    })
+      .then((x) => x.json())
+      .catch(() => ({ error: 'unreachable' }));
     setCommitted(commit);
 
     await wait(300);
-    say('thaakat', "I've assembled everything your doctors documented — including the scan they missed — into one brief. You've waited long enough. Let's get you answers.");
+    say(
+      'thaakat',
+      "I've assembled everything your doctors documented into one brief. You've waited long enough. Let's get you answers.",
+    );
     setRunning(false);
   }
 
   return (
     <main className="container">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 0' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '18px 0', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <h2 style={{ margin: 0 }}>Thaakat</h2>
-          <span className="muted" style={{ fontSize: 13 }}>reading your whole record — including the scan they missed</span>
+          <span className="muted" style={{ fontSize: 13 }}>
+            reading your whole record — including the scan they missed
+          </span>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          {voice.status !== 'idle' && <span className="pill">🎙️ {voice.status}</span>}
-          {voice.status === 'idle' ? (
-            <>
-              <button className="btn" onClick={simulate} disabled={running}>{running ? 'Running…' : '▶ Play demo'}</button>
-              <button className="btn" style={{ background: 'linear-gradient(135deg,var(--good),var(--accent))' }} onClick={goLive} disabled={running} title="Live Deepgram voice — needs DEEPGRAM_API_KEY">🎙️ Go live</button>
-            </>
-          ) : (
-            <button className="btn" onClick={voice.stop}>■ Stop</button>
-          )}
+
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Same engine, different patient — the "is this hardcoded to endo?" answer. */}
+          <select
+            className="pill"
+            value={patientId}
+            disabled={running}
+            onChange={(e) => {
+              setPatientId(e.target.value);
+              reset();
+            }}
+            style={{ background: 'transparent', color: 'inherit', border: '1px solid var(--border)', padding: '6px 10px' }}
+          >
+            {DEMO_PATIENTS.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name.given} {p.name.family} — {p.headline}
+              </option>
+            ))}
+          </select>
+
+          <button className="btn" onClick={simulate} disabled={running}>
+            {running ? 'Running…' : '▶ Play demo'}
+          </button>
+
+          <LiveVoice
+            handlers={liveHandlers}
+            patientId={patientId}
+            disabled={running}
+            onSeed={(seeded) => {
+              reset();
+              liveRecord.current = [...seeded];
+              setRecord([...seeded]);
+              setPhase('interview');
+            }}
+          />
         </div>
       </div>
 
@@ -183,15 +253,34 @@ export default function Intake() {
         <div className="grid">
           <div className="card">
             <div className="muted" style={{ fontSize: 12, marginBottom: 10 }}>
-              📄 The Dossier — assembled record {phase === 'connecting' && <span className="pill">connecting via patient-access APIs…</span>} {mossMs != null && <span className="pill">retrieval {mossMs}ms</span>}
+              📄 The Dossier — assembled record{' '}
+              {phase === 'connecting' && <span className="pill">connecting via patient-access APIs…</span>}{' '}
+              {retrieval && (
+                <span className="pill" title="Retrieval call only — excludes the server→Moss network hop">
+                  {retrieval.backend === 'moss' ? 'Moss' : 'local fallback'} retrieval {retrieval.ms}ms
+                </span>
+              )}
             </div>
-            {record.length === 0 && <p className="muted">Press ▶ Play demo — your records assemble here.</p>}
+            {record.length === 0 && <p className="muted">Press ▶ Play demo, or start a live call — records assemble here.</p>}
             <div style={{ borderLeft: '2px solid var(--border)', paddingLeft: 14 }}>
               {record.map((f) => (
                 <div key={f.id} style={{ margin: '0 0 14px', position: 'relative' }}>
-                  <div style={{ position: 'absolute', left: -21, top: 4, width: 10, height: 10, borderRadius: 999,
-                    background: f.fromImaging ? 'var(--accent-2)' : f.orphaned ? 'var(--warn)' : 'var(--accent)' }} />
-                  <div style={{ fontSize: 12 }} className="muted">{f.date} · {f.specialty}{f.orphaned && <span className="warn"> · never followed up</span>}{f.fromImaging && <span style={{ color: 'var(--accent-2)' }}> · surfaced by Thaakat</span>}</div>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: -21,
+                      top: 4,
+                      width: 10,
+                      height: 10,
+                      borderRadius: 999,
+                      background: f.fromImaging ? 'var(--accent-2)' : f.orphaned ? 'var(--warn)' : 'var(--accent)',
+                    }}
+                  />
+                  <div style={{ fontSize: 12 }} className="muted">
+                    {f.date} · {f.specialty}
+                    {f.orphaned && <span className="warn"> · never followed up</span>}
+                    {f.fromImaging && <span style={{ color: 'var(--accent-2)' }}> · surfaced by Thaakat</span>}
+                  </div>
                   <div style={{ fontWeight: 600 }}>{f.label}</div>
                   <div className="muted" style={{ fontSize: 13 }}>{f.detail}</div>
                   <div className="muted" style={{ fontSize: 11, opacity: 0.7 }}>source: {f.source}</div>
@@ -202,26 +291,51 @@ export default function Intake() {
 
           {match && (
             <div className="card" style={{ borderColor: 'var(--accent-2)' }}>
-              <div className="muted" style={{ fontSize: 12 }}>🔍 Pattern nobody assembled <span className="pill">{Math.round(match.confidence * 100)}% match</span></div>
+              <div className="muted" style={{ fontSize: 12 }}>
+                🔍 Pattern nobody assembled <span className="pill">{Math.round(match.confidence * 100)}% match</span>
+              </div>
               <h3 style={{ margin: '6px 0' }}>{match.cluster.name}</h3>
               <p className="muted" style={{ marginTop: 0, fontSize: 13 }}>{match.cluster.narration}</p>
               <div style={{ marginTop: 10 }}>
                 <div className="pill" style={{ marginBottom: 8 }}>The Ask (for the clinician — never a diagnosis)</div>
                 <p style={{ margin: 0 }}>{match.cluster.ask}</p>
               </div>
+
               {coverage && (
                 <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 10 }}>
                   <span className="pill" style={{ marginBottom: 8 }}>The Cost</span>
                   <p style={{ margin: '6px 0 0' }}>
-                    <span className={coverage.active ? 'good' : 'bad'}>{coverage.active ? 'Covered' : 'Not covered'}</span>
-                    {coverage.copay && <> · ~${coverage.copay} out of pocket</>}
-                    {coverage.priorAuthRequired === 'Y' && <> · <span className="warn">prior auth started</span></>}
+                    {/* A failed eligibility call is NOT a denial. Rendering an error as "Not covered"
+                        puts a decision in the payer's mouth that the payer never made. */}
+                    {coverage.error ? (
+                      <span className="muted">Coverage check unavailable</span>
+                    ) : (
+                      <>
+                        <span className={coverage.active ? 'good' : 'bad'}>
+                          {coverage.active ? 'Covered' : 'Not covered'}
+                        </span>
+                        {coverage.copay && <> · ~${coverage.copay} out of pocket</>}
+                        {coverage.priorAuthRequired === 'Y' && (
+                          <> · <span className="warn">prior auth started</span></>
+                        )}
+                        {coverage.priorAuthRequired === 'U' && (
+                          <> · <span className="muted">prior auth undetermined by payer</span></>
+                        )}
+                      </>
+                    )}
                   </p>
                 </div>
               )}
+
               {committed && (
                 <p className="muted" style={{ fontSize: 11, marginBottom: 0 }}>
-                  {committed.error ? 'Medplum write skipped — check credentials.' : committed.dryRun ? committed.note : `Wrote ${Object.keys(committed.ids || {}).length} FHIR resources (incl. DetectedIssue) to Medplum.`}
+                  {/* Reading committed.ids unguarded crashed the whole page mid-demo when the
+                      FHIR write failed. A failed write degrades to a line, not a blank screen. */}
+                  {committed.error
+                    ? 'FHIR write unavailable — the assembled record above is unaffected.'
+                    : committed.dryRun
+                      ? committed.note
+                      : `Wrote ${Object.keys(committed.ids ?? {}).length} FHIR resources (incl. DetectedIssue) to Medplum.`}
                 </p>
               )}
             </div>
@@ -233,11 +347,24 @@ export default function Intake() {
           <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>🎙️ Conversation</div>
           {turns.map((t, i) => (
             <div key={i} style={{ margin: '10px 0', textAlign: t.role === 'patient' ? 'right' : 'left' }}>
-              <span style={{ display: 'inline-block', padding: '8px 12px', borderRadius: 12, maxWidth: '88%',
-                background: t.role === 'patient' ? 'var(--panel-2)' : 'linear-gradient(135deg,#20305e,#3a2a5e)' }}>{t.text}</span>
+              <span
+                style={{
+                  display: 'inline-block',
+                  padding: '8px 12px',
+                  borderRadius: 12,
+                  maxWidth: '88%',
+                  background: t.role === 'patient' ? 'var(--panel-2)' : 'linear-gradient(135deg,#20305e,#3a2a5e)',
+                }}
+              >
+                {t.text}
+              </span>
             </div>
           ))}
-          {turns.length === 0 && <p className="muted">Voice interview appears here. (Wire live Deepgram to replace the script — docs/BUILD_KIT.md.)</p>}
+          {turns.length === 0 && (
+            <p className="muted">
+              Press 🎙️ Talk to Thaakat for a live call, or ▶ Play demo for the scripted run.
+            </p>
+          )}
         </div>
       </div>
     </main>
