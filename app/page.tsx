@@ -9,6 +9,7 @@ import {
   ArrowIcon,
   CheckIcon,
 } from '@/components/ui';
+import { ModelCard } from '@/components/ModelCard';
 
 const NAV_LINKS = [
   { label: 'The problem', href: '#problem' },
@@ -390,20 +391,13 @@ export default function Home() {
                 We report it as <strong>investigational decision-support</strong>, never autonomous diagnosis — the hard
                 modality other teams can’t stand up in a weekend.
               </p>
-              <div className="evidence">
-                <div className="evi">
-                  <div className="evi-val">0.967</div>
-                  <div className="evi-label">ROC-AUC, 5-fold CV (±0.012, out-of-fold) — reported with its class imbalance, not accuracy.</div>
-                </div>
-                <div className="evi">
-                  <div className="evi-val" style={{ fontSize: '1.2rem' }}>12 texture features</div>
-                  <div className="evi-label">GLCM + first-order, extracted from the pixels — not a hardcoded label.</div>
-                </div>
-                <div className="evi">
-                  <div className="evi-val" style={{ fontSize: '1.2rem' }}>GLENDA · n=5,990</div>
-                  <div className="evi-label">Trained on a real, public endometriosis imaging dataset (500 / 5,490).</div>
-                </div>
-              </div>
+            </div>
+
+            <div style={{ marginTop: 34 }}>
+              <span className="label-sig" style={{ display: 'block', marginBottom: 6 }}>
+                The model — real, trained, honestly reported
+              </span>
+              <ModelCard />
             </div>
 
             <div style={{ marginTop: 40 }}>

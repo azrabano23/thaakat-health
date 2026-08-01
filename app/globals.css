@@ -640,6 +640,40 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
 .convo-row.thaakat .bubble-who { color: var(--signal); }
 
 /* ============================================================================
+   MODEL CARD — real ROC curve + datasets + pipeline (the imaging moat, shown)
+   ========================================================================== */
+.modelcard { display: grid; gap: clamp(20px, 3vw, 36px); margin-top: 20px; align-items: start; }
+@media (min-width: 880px) { .modelcard { grid-template-columns: 330px 1fr; } }
+.roc-fig { margin: 0; }
+.roc-fig svg { width: 100%; height: auto; background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-md); display: block; }
+.roc-frame { fill: none; stroke: var(--border); stroke-width: 1; }
+.roc-grid { stroke: var(--border-soft); stroke-width: 1; }
+.roc-diag { stroke: var(--faint); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.7; }
+.roc-curve { fill: none; stroke: var(--signal); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.roc-fill { fill: color-mix(in srgb, var(--signal) 10%, transparent); stroke: none; }
+.roc-axis { fill: var(--faint); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.03em; }
+.roc-auc { fill: var(--signal); font-family: var(--font-display); font-weight: 600; font-size: 19px; }
+.roc-fig figcaption { margin-top: 10px; font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); line-height: 1.5; }
+.model-detail { display: flex; flex-direction: column; gap: 22px; }
+.model-metrics { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1.5px solid var(--text); }
+.mm { padding: 14px 16px 14px 0; border-right: 1px solid var(--border); }
+.mm:last-child { border-right: 0; }
+.mm-v { font-family: var(--font-display); font-weight: 500; font-size: clamp(1.3rem, 2.2vw, 1.7rem); color: var(--text); letter-spacing: -0.01em; }
+.mm-pm { font-size: 0.55em; color: var(--muted); }
+.mm-l { margin-top: 6px; font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.03em; color: var(--muted); line-height: 1.4; }
+.model-pipe p { margin: 8px 0 0; font-size: 14px; line-height: 1.6; color: var(--text-2); }
+.model-pipe b { color: var(--text); font-weight: 640; }
+.model-data { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+.md-row { display: grid; grid-template-columns: 104px 118px 1fr; gap: 12px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--border-soft); }
+.md-row:last-child { border-bottom: 0; }
+.md-tag { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--signal); }
+.md-name { font-family: var(--font-display); font-weight: 500; font-size: 14px; color: var(--text); }
+.md-detail { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+@media (max-width: 640px) { .md-row { grid-template-columns: 1fr; gap: 3px; } }
+.model-caveat { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--muted); border-left: 2px solid var(--signal); padding-left: 12px; }
+.model-caveat b { color: var(--text-2); }
+
+/* ============================================================================
    CLINICAL CONSOLE (/intake) — light editorial patient workspace
    Reuses the paper tokens + timeline/cluster/convo classes; adds an EHR-style
    patient banner (demographics, vitals, labs, history, the biopsy gate).
