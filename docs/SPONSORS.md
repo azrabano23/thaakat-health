@@ -30,8 +30,8 @@ Synthetic data only. Never put real PHI through free tiers (Moss/Deepgram BAA ar
   medplum login
   cd medplum
   # set the Bot ids in medplum.config.json, then:
-  npx medplum bot deploy noor-intake-to-fhir
-  npx medplum bot deploy noor-eligibility
+  npx medplum bot deploy thaakat-intake-to-fhir
+  npx medplum bot deploy thaakat-eligibility
   ```
   Store secrets on each Bot (Project Admin → Secrets): `ANTHROPIC_API_KEY`, `STEDI_API_KEY`.
 - **Seed data:** clone `medplum-eligibility-demo` / `medplum-patient-intake-demo` and use their "Upload Core/Example data" buttons for instant Patient + Coverage + Questionnaire.

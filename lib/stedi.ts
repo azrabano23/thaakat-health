@@ -39,7 +39,7 @@ export async function checkEligibility(opts: {
   npi?: string;
 }): Promise<EligibilityResult> {
   const body = {
-    provider: { npi: opts.npi ?? '1999999984', organizationName: 'Noor Health' },
+    provider: { npi: opts.npi ?? '1999999984', organizationName: 'Thaakat Health' },
     subscriber: opts.patient.subscriber,
     encounter: { serviceTypeCodes: opts.serviceTypeCodes ?? ['30'] },
     tradingPartnerServiceId: opts.patient.tradingPartnerServiceId,

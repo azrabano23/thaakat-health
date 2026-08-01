@@ -1,4 +1,4 @@
-# Noor — Build Kit (the execution plan)
+# Thaakat — Build Kit (the execution plan)
 
 Everything you need to go from clone → working demo in one day. Read [`TEAMMATE_BRIEF.md`](./TEAMMATE_BRIEF.md) for the why, [`SPONSORS.md`](./SPONSORS.md) for exact keys/setup, and [`../CLAUDE.md`](../CLAUDE.md) for coding rules.
 
@@ -31,7 +31,7 @@ What's already scaffolded in this repo:
 - `app/intake` — the **record-assembly demo**: records connect → timeline assembles live → chart-aware Q → radiomics re-reads the under-read MRI → cluster lights up → Dossier / The Ask / The Cost.
 - `app/api/*` — working routes: Deepgram token, Moss retrieval (+local fallback), imaging (radiomics stub), Stedi eligibility (test mode), Medplum write (DetectedIssue + chart + referral + PA).
 - `lib/clusters.ts` — **the cluster engine**: the pre-seeded longitudinal record + 3 cluster definitions (endo / Sjögren's / celiac) + a transparent matcher.
-- `lib/*` — sponsor clients + endo/imaging criteria corpus (Moss) + Noor prompts.
+- `lib/*` — sponsor clients + endo/imaging criteria corpus (Moss) + Thaakat prompts.
 - `medplum/bots/*` — the two Bots (intake→FHIR via Claude, eligibility via Stedi).
 
 ---
@@ -58,10 +58,10 @@ Converge by ~3pm on one clean end-to-end run. Record the video early.
 
 1. **Cold open (15s):** "A woman saw 5 doctors over 3 years. Every one did their job. Nobody's job was to read it all together." Open `/intake`, hit Play.
 2. **Records assemble (25s):** Maria's record connects "via the patient-access APIs" and a **timeline assembles itself** — GP 2022, GI 2023, an *unremarkable* ultrasound, an **orphaned CA-125 nobody followed up**, an MRI called normal. Let the judges watch it build.
-3. **Chart-aware interview (25s):** Noor asks about *her actual record* ("I see a CA-125 that was never followed up…") — Moss retrieved over the whole record in <10ms (point at the badge). She mentions pain during sex; it lands on the timeline.
-4. **The imaging moment — THE gasp (30s):** "That MRI they called normal — let me look myself." → the **radiomics re-read lights up a deep-infiltrating-endometriosis nodule** and drops onto the timeline as *surfaced by Noor*.
+3. **Chart-aware interview (25s):** Thaakat asks about *her actual record* ("I see a CA-125 that was never followed up…") — Moss retrieved over the whole record in <10ms (point at the badge). She mentions pain during sex; it lands on the timeline.
+4. **The imaging moment — THE gasp (30s):** "That MRI they called normal — let me look myself." → the **radiomics re-read lights up a deep-infiltrating-endometriosis nodule** and drops onto the timeline as *surfaced by Thaakat*.
 5. **The pattern nobody assembled (20s):** the **cluster card lights up** — Endometriosis pattern, XX% match — with **The Ask** (a question for the clinician, never a diagnosis) and **The Cost** (live Stedi: covered, ~$210, prior auth started). FHIR incl. a `DetectedIssue` writes to Medplum.
-6. **Close (20s):** "Reading a whole chart used to cost a physician-hour, so it was nobody's job. It now costs forty cents — and Noor caught the scan they missed." → founder line: *"I did the radiomics research on this. I know why women wait a decade — and I built the fix."*
+6. **Close (20s):** "Reading a whole chart used to cost a physician-hour, so it was nobody's job. It now costs forty cents — and Thaakat caught the scan they missed." → founder line: *"I did the radiomics research on this. I know why women wait a decade — and I built the fix."*
 7. **The "only endo?" back-pocket:** flip to `lib/clusters.ts`, show the Sjögren's + celiac definitions matching. 10 seconds = "system, not hardcoded."
 
 **Demo-hardening:** rehearse with the exact Stedi test values (`docs/SPONSORS.md`); keep the local Moss fallback on so retrieval can't fail; pre-load the sample MRI; have the `UHCINACTIVE` decline path ready as an "intentional" negative case.
@@ -71,8 +71,8 @@ Converge by ~3pm on one clean end-to-end run. Record the video early.
 ## Submission form draft (fill/trim day-of)
 
 - **Team name:** _(yours)_
-- **Hack name + tagline:** **Noor — bringing what's hidden into the light. A voice-first diagnostic navigator that reads your scan and turns the 7–10 year endometriosis odyssey into one conversation.**
-- **Problem:** Diagnostic delay is a *structural* failure — the clues are already documented across specialists, but nobody's job is to read them together, and the confirming sign is often in a scan that was under-read. Noor assembles the whole record and re-reads the imaging, turning a 7–10 year odyssey (endometriosis first) into one conversation.
+- **Hack name + tagline:** **Thaakat — bringing what's hidden into the light. A voice-first diagnostic navigator that reads your scan and turns the 7–10 year endometriosis odyssey into one conversation.**
+- **Problem:** Diagnostic delay is a *structural* failure — the clues are already documented across specialists, but nobody's job is to read them together, and the confirming sign is often in a scan that was under-read. Thaakat assembles the whole record and re-reads the imaging, turning a 7–10 year odyssey (endometriosis first) into one conversation.
 - **How we used each sponsor:**
   - **Deepgram** — Voice Agent API (Flux STT + Aura TTS + barge-in, Claude as the think model) runs the adaptive clinical interview that captures the narrative. Voice is the *sensor*, not a wrapper.
   - **Moss** — retrieval-heavy: every turn we do multiple <10ms lookups (diagnostic criteria + patient history) so the interview branches like a specialist with zero dead air.

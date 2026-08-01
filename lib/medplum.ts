@@ -1,5 +1,5 @@
 // Medplum FHIR client (server-side, client-credentials) + chart-writing helpers.
-// Writes the structured picture Noor builds: Condition, Observations, DiagnosticReport (radiomics),
+// Writes the structured picture Thaakat builds: Condition, Observations, DiagnosticReport (radiomics),
 // ServiceRequest (referral), Coverage, Claim(use="preauthorization"), Task (PA tracking).
 // FHIR R4 only. Synthetic data only.
 
@@ -11,6 +11,7 @@ import type {
   ServiceRequest,
   DiagnosticReport,
   DetectedIssue,
+  Device,
   Claim,
   Task,
 } from '@medplum/fhirtypes';
@@ -32,7 +33,7 @@ export async function getMedplum(): Promise<MedplumClient | null> {
 export type ChartInput = {
   patientId?: string;
   patientName?: { given: string; family: string };
-  symptoms: string[]; // plain-language symptom snippets Noor captured
+  symptoms: string[]; // plain-language symptom snippets Thaakat captured
   imagingFindings?: string[]; // radiomics narration lines
   referral?: { specialty: string; imaging?: string; cptCode?: string };
   priorAuthRequired?: boolean;
@@ -69,7 +70,7 @@ export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean;
       resourceType: 'Observation',
       status: 'preliminary',
       category: [{ coding: [{ system: 'http://terminology.hl7.org/CodeSystem/observation-category', code: 'survey' }] }],
-      code: { text: 'Patient-reported symptom (Noor voice intake)' },
+      code: { text: 'Patient-reported symptom (Thaakat voice intake)' },
       valueString: s,
       subject,
     });
@@ -81,13 +82,19 @@ export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean;
     resourceType: 'Condition',
     clinicalStatus: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-clinical', code: 'active' }] },
     verificationStatus: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-ver-status', code: 'provisional' }] },
-    code: { text: 'Suspected endometriosis — for specialist evaluation (Noor navigator, not a diagnosis)' },
+    code: { text: 'Suspected endometriosis — for specialist evaluation (Thaakat navigator, not a diagnosis)' },
     subject,
   });
   ids['Condition'] = condition.id!;
 
   // the assembled cross-specialty pattern -> DetectedIssue ("nobody's job was to see this")
+  // Idiomatic FHIR: author = the radiomics Device, evidence = the real resources it reasoned over.
   if (input.cluster) {
+    const device = await medplum.createResource<Device>({
+      resourceType: 'Device',
+      status: 'active',
+      deviceName: [{ name: 'Radiomics decision-support model', type: 'model-name' }],
+    });
     const issue = await medplum.createResource<DetectedIssue>({
       resourceType: 'DetectedIssue',
       status: 'preliminary',
@@ -95,7 +102,10 @@ export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean;
       code: { text: input.cluster.name },
       detail: input.cluster.ask,
       patient: subject,
+      author: createReference(device),
+      evidence: [{ detail: [createReference(condition)] }],
     });
+    ids['Device'] = device.id!;
     ids['DetectedIssue'] = issue.id!;
   }
 
@@ -104,7 +114,7 @@ export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean;
     const report = await medplum.createResource<DiagnosticReport>({
       resourceType: 'DiagnosticReport',
       status: 'preliminary',
-      code: { text: 'Pelvic MRI — radiomics decision-support (Noor)' },
+      code: { text: 'Pelvic MRI — radiomics decision-support (Thaakat)' },
       subject,
       conclusion: input.imagingFindings.join(' '),
     });
@@ -136,7 +146,7 @@ export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean;
         patient: subject,
         created: new Date().toISOString(),
         priority: { coding: [{ system: 'http://terminology.hl7.org/CodeSystem/processpriority', code: 'normal' }] },
-        provider: { display: 'Noor (demo provider)' }, // Claim.provider is an org/practitioner ref
+        provider: { display: 'Thaakat (demo provider)' }, // Claim.provider is an org/practitioner ref
         insurance: [{ sequence: 1, focal: true, coverage: { display: 'Demo coverage' } }],
       });
       ids['Claim(preauth)'] = claim.id!;
@@ -145,7 +155,7 @@ export async function commitChart(input: ChartInput): Promise<{ dryRun: boolean;
         resourceType: 'Task',
         status: 'in-progress',
         intent: 'order',
-        description: 'Prior authorization submitted for recommended imaging (Noor)',
+        description: 'Prior authorization submitted for recommended imaging (Thaakat)',
         for: subject,
         focus: createReference(claim),
       });

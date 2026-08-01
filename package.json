@@ -1,14 +1,15 @@
 {
-  "name": "noor",
+  "name": "thaakat",
   "version": "0.1.0",
   "private": true,
-  "description": "Noor — voice-first, multimodal diagnostic navigator for women's health (YC × Medplum hackathon)",
+  "description": "Thaakat — voice-first, multimodal diagnostic navigator for women's health (YC × Medplum hackathon)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "npx --yes tsx scripts/seed-fhir.ts"
   },
   "dependencies": {
     "@deepgram/sdk": "^5.7.0",

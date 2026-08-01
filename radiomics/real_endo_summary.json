@@ -1,0 +1,50 @@
+{
+  "task": "endometriosis vs no-pathology (real GLENDA laparoscopy frames)",
+  "dataset": "GLENDA v1.5 (real)",
+  "n": 5990,
+  "endometriosis": 500,
+  "normal": 5490,
+  "cv_auc": "0.967 +/- 0.012",
+  "cv_accuracy": "0.964 +/- 0.003",
+  "cv_folds": 5,
+  "features": [
+    "fo_energy",
+    "fo_entropy",
+    "fo_mean",
+    "fo_p10",
+    "fo_p90",
+    "fo_std",
+    "glcm_ASM",
+    "glcm_contrast",
+    "glcm_correlation",
+    "glcm_dissimilarity",
+    "glcm_energy",
+    "glcm_homogeneity"
+  ],
+  "top_features": [
+    {
+      "feature": "fo_entropy",
+      "importance": 0.1256
+    },
+    {
+      "feature": "glcm_homogeneity",
+      "importance": 0.1054
+    },
+    {
+      "feature": "fo_p10",
+      "importance": 0.1032
+    },
+    {
+      "feature": "fo_energy",
+      "importance": 0.0964
+    },
+    {
+      "feature": "glcm_contrast",
+      "importance": 0.0906
+    },
+    {
+      "feature": "glcm_ASM",
+      "importance": 0.0873
+    }
+  ]
+}

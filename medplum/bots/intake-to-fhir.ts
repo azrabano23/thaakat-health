@@ -53,7 +53,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Questionna
     await medplum.createResource<Observation>({
       resourceType: 'Observation',
       status: 'preliminary',
-      code: { text: 'Patient-reported symptom (Noor voice intake)' },
+      code: { text: 'Patient-reported symptom (Thaakat voice intake)' },
       valueString: s,
       subject,
     });
@@ -64,7 +64,7 @@ export async function handler(medplum: MedplumClient, event: BotEvent<Questionna
     verificationStatus: {
       coding: [{ system: 'http://terminology.hl7.org/CodeSystem/condition-ver-status', code: 'provisional' }],
     },
-    code: { text: 'Suspected endometriosis — for specialist evaluation (Noor navigator, not a diagnosis)' },
+    code: { text: 'Suspected endometriosis — for specialist evaluation (Thaakat navigator, not a diagnosis)' },
     subject,
   });
 

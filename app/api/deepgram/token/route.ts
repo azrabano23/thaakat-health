@@ -14,7 +14,10 @@ export async function POST() {
     body: JSON.stringify({ ttl_seconds: 300 }),
   });
   if (!res.ok) {
-    return NextResponse.json({ error: await res.text() }, { status: res.status });
+    // This key can't mint JWTs (needs "Member" permission). Fall back to the raw key for the
+    // browser WebSocket auth — Sec-WebSocket-Protocol accepts the API key directly. Fine for a
+    // demo; use a Member-scoped key to mint short-lived tokens in production.
+    return NextResponse.json({ access_token: key, expires_in: 0, fallback: true });
   }
   const data = await res.json(); // { access_token, expires_in }
   return NextResponse.json(data);

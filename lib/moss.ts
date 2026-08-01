@@ -5,7 +5,7 @@
 
 import { ENDO_CRITERIA, type CriterionDoc } from './criteria';
 
-const INDEX = 'noor-endo-criteria';
+const INDEX = 'thaakat-endo-criteria';
 let mossLoaded = false;
 let mossClient: any = null;
 

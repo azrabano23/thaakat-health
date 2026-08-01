@@ -5,7 +5,7 @@
 export type CriterionDoc = {
   id: string;
   text: string;
-  // what follow-up question this signal should make Noor ask next
+  // what follow-up question this signal should make Thaakat ask next
   followUp?: string;
   tags: string[];
 };

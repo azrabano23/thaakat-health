@@ -15,7 +15,7 @@ export async function handler(
 
   // Demo default: Aetna test patient. In a real build, map request.patient -> member identifiers.
   const stediBody = {
-    provider: { npi: '1999999984', organizationName: 'Noor Health' },
+    provider: { npi: '1999999984', organizationName: 'Thaakat Health' },
     subscriber: { firstName: 'Jane', lastName: 'Doe', dateOfBirth: '20040404', memberId: 'AETNA12345' },
     encounter: { serviceTypeCodes: ['30'] },
     tradingPartnerServiceId: '60054',

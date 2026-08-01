@@ -1,11 +1,11 @@
-# Noor 🩺🎙️ — read this first (teammate brief)
+# Thaakat 🩺🎙️ — read this first (teammate brief)
 
-> **Noor** (نور — Arabic/Urdu/Persian for *"light"*). **One line:**
-> **Noor is a voice agent that reads a woman's *whole* medical record — including the scan that was under-read — and assembles the picture nobody's job was to see, turning a 7–10 year diagnostic odyssey into one conversation.**
+> **Thaakat** (نور — Urdu/Arabic for *"strength"*). **One line:**
+> **Thaakat is a voice agent that reads a woman's *whole* medical record — including the scan that was under-read — and assembles the picture nobody's job was to see, turning a 7–10 year diagnostic odyssey into one conversation.**
 >
 > This README is the full brief for the team (human + your Claude/Cursor). Deeper docs: [`docs/BUILD_KIT.md`](docs/BUILD_KIT.md) (build plan), [`docs/SPONSORS.md`](docs/SPONSORS.md) (exact keys/setup), [`CLAUDE.md`](CLAUDE.md) (coding rules).
 >
-> ⚕️ **Decision-support / navigation — never "diagnosis."** Noor surfaces documented findings + a question for a clinician. Synthetic demo data only.
+> ⚕️ **Decision-support / navigation — never "diagnosis."** Thaakat surfaces documented findings + a question for a clinician. Synthetic demo data only.
 
 ---
 
@@ -13,9 +13,9 @@
 
 We're at the **YC × Medplum Agentic Healthcare Hackathon** (Sat Aug 1, YC SF). **1st prize = a YC interview.** Everyone has Claude + the same 4 sponsor tools, so most teams build the *same* thing — a voice scribe that fills a form. That's a graveyard of funded unicorns (Abridge $5.3B, Ambience $1.25B…). Building it = instant loss.
 
-**Noor's wedge is two things nobody else combines:**
-1. **Record assembly** — diagnostic delay is a *structural* failure: the clues are already in the chart, scattered across specialists, but **nobody's job is to read them together.** Noor is the thing that reads everything and assembles the picture.
-2. **The imaging moat** — the orphaned clue is often a **scan that was under-read.** Noor's radiomics layer re-reads the MRI/ultrasound and catches what a routine read misses. This is Azra's actual research — a hard modality 40 other teams *cannot* replicate in a day.
+**Thaakat's wedge is two things nobody else combines:**
+1. **Record assembly** — diagnostic delay is a *structural* failure: the clues are already in the chart, scattered across specialists, but **nobody's job is to read them together.** Thaakat is the thing that reads everything and assembles the picture.
+2. **The imaging moat** — the orphaned clue is often a **scan that was under-read.** Thaakat's radiomics layer re-reads the MRI/ultrasound and catches what a routine read misses. This is Azra's actual research — a hard modality 40 other teams *cannot* replicate in a day.
 
 **Beachhead: endometriosis / women's health** — longest delay, highest stigma, and Azra's domain.
 
@@ -36,7 +36,7 @@ Diagnostic delay is usually blamed on "some diseases are hard." It mostly isn't 
 - NIH's Undiagnosed Diseases Network does this assembly *by hand*: 35% solve rate, **~$19,000/case.** An LLM assembly pass costs about **$0.40.**
 - **Why now:** a 2022 federal rule forces hospitals to expose complete records via patient-access APIs, and CMS-0057-F forces payers to expose FHIR prior-auth/coverage APIs by **Jan 2027.** *The pipes are open. Nobody built the thing that runs on top.*
 
-**And the second failure — imaging:** for endometriosis specifically, the signs (deep infiltrating endometriosis, adenomyosis, endometriomas) are **routinely missed on MRI/ultrasound** because standard reads aren't looking for them. So the answer is often *already sitting in a scan nobody read carefully.* Noor catches both halves.
+**And the second failure — imaging:** for endometriosis specifically, the signs (deep infiltrating endometriosis, adenomyosis, endometriomas) are **routinely missed on MRI/ultrasound** because standard reads aren't looking for them. So the answer is often *already sitting in a scan nobody read carefully.* Thaakat catches both halves.
 
 ---
 
@@ -81,13 +81,13 @@ Diagnostic delay is usually blamed on "some diseases are hard." It mostly isn't 
 
 ## 6. The solution + the flow (the demo)
 
-**Noor reads everything and assembles the picture.** Demo (2–3 min):
+**Thaakat reads everything and assembles the picture.** Demo (2–3 min):
 
 ```
 1. Patient ("Maria") connects her records — pre-seeded, framed as via the federal patient-access APIs.
-2. She talks to Noor. Questions are CHART-AWARE:
+2. She talks to Thaakat. Questions are CHART-AWARE:
    "I see a pelvic ultrasound from last year and an ANA lab nobody followed up — tell me about the pain."
-   (Moss retrieves over her whole record in <10ms, so Noor asks the right thing INSIDE the conversation.)
+   (Moss retrieves over her whole record in <10ms, so Thaakat asks the right thing INSIDE the conversation.)
 3. THE MOMENT — a timeline assembles itself on screen: dental note, ultrasound 2024,
    an orphaned positive lab from 2025 nobody acted on, today's story. A cluster card lights up.
 4. THE IMAGING MOMENT (our moat): "That pelvic MRI they called normal — let me look myself."
@@ -98,10 +98,10 @@ Diagnostic delay is usually blamed on "some diseases are hard." It mostly isn't 
    • The Ask — "worth discussing a laparoscopy referral / endo-protocol MRI" — a question, never a diagnosis.
    • The Cost — live Stedi check: "$38 on your plan, deductible met."
 6. Close: "Reading a whole chart used to cost a physician-hour, so it was nobody's job.
-   It now costs forty cents — and Noor caught the scan they missed. Seven to ten years… in one conversation."
+   It now costs forty cents — and Thaakat caught the scan they missed. Seven to ten years… in one conversation."
 ```
 
-**Safety rule (non-negotiable, and our answer to judges):** Noor never names a condition to the patient. It surfaces **documented findings + a recognized cluster + a question for the clinician**, who can independently check every source. That keeps us in clinical-decision-support territory, not diagnosis.
+**Safety rule (non-negotiable, and our answer to judges):** Thaakat never names a condition to the patient. It surfaces **documented findings + a recognized cluster + a question for the clinician**, who can independently check every source. That keeps us in clinical-decision-support territory, not diagnosis.
 
 ---
 
@@ -139,8 +139,8 @@ Medplum bots (deploy separately, not on Vercel): `cd medplum && npx medplum bot 
 ## 10. Repo layout
 
 - `app/` — Next.js UI + API routes (Deepgram token, Moss retrieval+fallback, imaging, Stedi eligibility, Medplum write)
-- `lib/` — sponsor clients, endo/cluster criteria corpus, Noor prompts
+- `lib/` — sponsor clients, endo/cluster criteria corpus, Thaakat prompts
 - `medplum/bots/` — Medplum Bots (deploy via Medplum CLI)
 - `docs/` — build kit, sponsor setup, extended brief · `CLAUDE.md` — coding rules
 
-**One-liner to remember:** *"Everyone's building the scribe. We built the thing that reads your whole record — including the scan they missed — and turns a decade of being dismissed into one conversation. Noor: bringing what's hidden into the light."*
+**One-liner to remember:** *"Everyone's building the scribe. We built the thing that reads your whole record — including the scan they missed — and turns a decade of being dismissed into one conversation. Thaakat: bringing what's hidden into the light."*

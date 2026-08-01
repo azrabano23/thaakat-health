@@ -5,7 +5,7 @@
 
 export type ImagingFinding = {
   label: string;
-  narration: string; // what Noor says out loud
+  narration: string; // what Thaakat says out loud
   // normalized bounding box on the displayed image, for the overlay [x, y, w, h] in 0..1
   region?: [number, number, number, number];
   confidence?: number; // 0..1 (demo)
