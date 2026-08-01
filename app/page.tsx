@@ -108,20 +108,22 @@ export default function Home() {
             </div>
 
             <h1 className="display display-xl rise rise-2">
-              To diagnose endometriosis, doctors still have to{' '}
-              <span className="italic underscore">cut you open.</span>
+              She wasn’t hard to diagnose. She was sent to the{' '}
+              <span className="italic underscore">wrong doctor</span> — for ten years.
             </h1>
 
             <div className="mag hero-lower">
               <div className="hero-copy">
                 <p className="lede rise rise-2">
-                  There’s no non-invasive test — surgery <em>is</em> the diagnostic test. So 1 in 10 women —{' '}
-                  <strong>190 million</strong> — spend 7–10 years and seven doctors in pain, missing work, losing
-                  fertility, waiting for surgery to confirm what their scan already showed.
+                  1 in 10 women spend <strong>7–10 years</strong> bounced between GI, urology, and primary care —
+                  misrouted, while the answer sits unread in their own chart. Thaakat is the{' '}
+                  <strong>voice-first front door</strong>: you talk, and before you ever see a doctor it charts the
+                  conversation, deep-researches it against your whole history, and routes you to the right specialist
+                  the first time.
                 </p>
 
                 <p className="hero-motto rise rise-3">
-                  The answer was already there. <span className="sig">Thaakat reads it.</span>
+                  The answer was already there. <span className="sig">Thaakat routes you to it.</span>
                 </p>
 
                 <div className="hero-cta rise rise-3">
@@ -147,7 +149,7 @@ export default function Home() {
                 </div>
                 <figcaption className="plate-cap">
                   <span className="fno">Fig. 1</span>
-                  <span>Pelvic MRI (T2). Thaakat’s radiomics overlay flags the lesion a routine read called “normal.”</span>
+                  <span>Pelvic MRI (T2) — the scan a routine read called “normal.” When a scan is part of the picture, Thaakat re-reads it and flags what a specialist should see.</span>
                 </figcaption>
               </figure>
             </div>

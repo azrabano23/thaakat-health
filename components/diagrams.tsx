@@ -25,14 +25,14 @@ const ARCH: ArchNode[] = [
     role: 'Voice intake',
     icon: <MicIcon />,
     tag: 'listens',
-    note: 'She just talks — no forms. Deepgram’s live Voice Agent transcribes with Nova-3 Medical (so it actually hears “CA-125” and “dyspareunia,” not gibberish), speaks back in a natural voice, and lets her interrupt. It captures the symptom story a rushed visit throws away.',
+    note: 'She just talks — no forms. Deepgram’s live Voice Agent runs the whole triage interview: Nova-3 Medical transcribes clinical vocabulary (it actually hears “CA-125” and “dyspareunia”), an empathetic Aura-2 voice speaks back, barge-in lets her interrupt, and Claude reasons as the brain of the call. Its function-calling is what drives every step below. The natural conversation a rushed visit throws away.',
   },
   {
     name: 'Claude',
     role: 'Reasoning',
     icon: <SparkIcon />,
     tag: 'decides',
-    note: 'The brain of the call. Claude chooses the next question, connects clues scattered across five specialists into one pattern, and turns the whole conversation into a structured medical record — using forced tool-use so it fills our exact schema instead of writing loose prose.',
+    note: 'The brain of the call. Claude decides the next question, triages her — which specialist she should see, and whether she even needs a scan — connects clues scattered across five specialists into one pattern, and turns the whole conversation into a structured medical record, using forced tool-use so it fills our exact schema instead of writing loose prose.',
   },
   {
     name: 'Moss',
@@ -54,14 +54,14 @@ const ARCH: ArchNode[] = [
     role: 'FHIR · DetectedIssue',
     icon: <RecordIcon />,
     tag: 'writes',
-    note: 'A finding a doctor can’t verify is worthless, so everything becomes real, auditable medical data. One atomic write creates 16 typed FHIR resources — the DetectedIssue, a RiskAssessment carrying the model’s confidence, an n=1 CarePlan, and a CommunicationRequest that flags a human specialist to peer-review it — each with a Provenance trail proving it was derived from her transcript. A chart a real hospital system can ingest, not a chat log.',
+    note: 'A finding a doctor can’t verify is worthless, so everything becomes real, auditable FHIR. One atomic transaction writes 16 typed resources — a DetectedIssue, a RiskAssessment with the model’s confidence, an n=1 CarePlan, and a CommunicationRequest flagging a human specialist to peer-review it — each with a Provenance trail proving it came from her transcript. Three Bots run on Medplum’s own infrastructure (intake→FHIR, a closed-loop re-read, eligibility), fenced by an AccessPolicy, with codes validated against a real terminology. A chart a hospital can ingest, not a chat log.',
   },
   {
     name: 'Stedi',
     role: 'Coverage',
     icon: <CoverageIcon />,
     tag: 'clears',
-    note: 'Finding the answer isn’t enough if she can’t afford the next step. Stedi runs real insurance eligibility (the 270/271 exchange) to price the recommended test and check whether prior authorization is needed — so the run ends with a covered, scheduled step, not another “come back later.”',
+    note: 'Finding the answer isn’t enough if she can’t afford the next step. Stedi runs real insurance eligibility (the 270/271 exchange) for the specific test — returning the full benefits picture: plan, copay, coinsurance, deductible, out-of-pocket max — and whether prior authorization is required. The run ends with a covered, priced, scheduled step, not another “come back later.”',
   },
 ];
 
