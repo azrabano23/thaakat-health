@@ -31,9 +31,10 @@ const STATS = [
 const WORKFLOW = [
   { n: '01', title: 'You talk — it charts as you speak', body: 'You check in by talking to a voice agent. The conversation becomes clinical documentation in real time — capturing the symptom story that forms and rushed visits lose.' },
   { n: '02', title: 'Deep-researched, with your full history', body: 'Any issue you describe — even a simple rash — is researched against the guidelines and your own record, so the next question is tailored to you, not generic.' },
-  { n: '03', title: 'Your data, re-read and visualized', body: 'Every note, lab, and scan is assembled into one timeline, and the under-read scan is re-read by a real model — so you can see what was hiding in your own record.' },
-  { n: '04', title: 'An n=1 plan, peer-reviewed by an expert', body: 'A personalized next-steps plan (a FHIR CarePlan), flagged for a human specialist to peer-review before your visit — decision-support, never an autonomous diagnosis.' },
-  { n: '05', title: 'Cost & coverage, up front', body: 'Ask what it costs and whether insurance covers it — a live eligibility check — before you ever see the doctor.' },
+  { n: '03', title: 'Triaged & routed to the right specialist', body: 'The core move. The reason it takes seven doctors is misrouting — GI for “IBS”, urology for “UTIs”, psych for “stress”. Thaakat decides which specialist you actually need — and whether you even need a scan — and routes you there the first time.' },
+  { n: '04', title: 'Your scan, re-read — only if it matters', body: 'When imaging is part of the picture, a real model re-reads the scan they called “normal” for what a routine read misses. Many patients don’t need one — and Thaakat says so.' },
+  { n: '05', title: 'An n=1 plan, peer-reviewed by an expert', body: 'A personalized next-steps plan (a FHIR CarePlan), flagged for a human specialist to peer-review before your visit — decision-support, never an autonomous diagnosis.' },
+  { n: '06', title: 'Cost & coverage, up front', body: 'What it costs and whether insurance covers it — a live eligibility check — before you ever see the doctor.' },
 ];
 
 const MODEL = [
@@ -265,8 +266,8 @@ export default function Home() {
             <SectionHeading
               index="№ 02"
               eyebrow="The solution"
-              title="The doctor's visit of the future — before you see a doctor."
-              lede="Voice-first: you talk, it charts as you speak, deep-researches your issue against your full history, builds an n=1 plan a human expert peer-reviews, and tells you the cost — all before the visit. Endometriosis is where we prove it, because it's the hardest case: the answer is usually already hidden in the record."
+              title="A voice-first front door that triages you to the right specialist."
+              lede="You talk; it charts the conversation, deep-researches it against your full history, and triages you to the right specialist the first time — the misrouting fix that's the difference between seven doctors and one. When a scan matters it re-reads it, then hands you an n=1 plan a human expert peer-reviews, and the cost — all before you see a doctor. Endometriosis is where we prove it: the hardest case, misrouted for a decade."
             />
 
             <div className="steps-ed" style={{ marginTop: 40 }}>
