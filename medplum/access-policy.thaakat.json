@@ -1,0 +1,22 @@
+{
+  "__comment": "AccessPolicy for the Thaakat ClientApplication. Attach it to the client's ProjectMembership (membership.access[].policy) so the app can ONLY touch the resource types it actually writes. Any type not listed is blocked. Grounded in the Medplum access-policies docs. Codes/behaviour are decision-support only.",
+  "resourceType": "AccessPolicy",
+  "name": "Thaakat Client Policy",
+  "resource": [
+    { "resourceType": "Patient" },
+    { "resourceType": "Condition" },
+    { "resourceType": "Observation" },
+    { "resourceType": "DocumentReference" },
+    { "resourceType": "DiagnosticReport" },
+    { "resourceType": "DetectedIssue" },
+    { "resourceType": "Device" },
+    { "resourceType": "ServiceRequest" },
+    { "resourceType": "Claim" },
+    { "resourceType": "Task" },
+    { "resourceType": "Binary" },
+    { "resourceType": "Provenance", "interaction": ["create", "read", "search"] },
+    { "resourceType": "ImagingStudy", "interaction": ["read", "search"] },
+    { "resourceType": "Subscription", "interaction": ["read", "search"] },
+    { "resourceType": "QuestionnaireResponse" }
+  ]
+}

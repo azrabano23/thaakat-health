@@ -1,0 +1,26 @@
+{
+  "__comment": "Multi-tenant variant: one parameterized policy template, bound to a concrete Organization per clinic on the ProjectMembership (access[].parameter name=organization). Each client sees ONLY its clinic's compartment. Tag a Patient into a tenant with POST Patient/{id}/$set-accounts {accounts: Organization/x, propagate: true} — Patient is the one type that propagates to its whole compartment. Grounded in Medplum multi-tenant-access-policy docs.",
+  "resourceType": "AccessPolicy",
+  "id": "thaakat-tenant-policy",
+  "name": "Thaakat Org Tenant Access",
+  "resource": [
+    { "resourceType": "Patient", "criteria": "Patient?_compartment=%organization" },
+    { "resourceType": "Condition", "criteria": "Condition?_compartment=%organization" },
+    { "resourceType": "Observation", "criteria": "Observation?_compartment=%organization" },
+    { "resourceType": "DiagnosticReport", "criteria": "DiagnosticReport?_compartment=%organization" },
+    { "resourceType": "DocumentReference", "criteria": "DocumentReference?_compartment=%organization" },
+    { "resourceType": "DetectedIssue", "criteria": "DetectedIssue?_compartment=%organization" },
+    { "resourceType": "ServiceRequest", "criteria": "ServiceRequest?_compartment=%organization" },
+    { "resourceType": "Claim", "criteria": "Claim?_compartment=%organization" },
+    { "resourceType": "Task", "criteria": "Task?_compartment=%organization" }
+  ],
+  "__bindingExample": {
+    "resourceType": "ProjectMembership",
+    "access": [
+      {
+        "policy": { "reference": "AccessPolicy/thaakat-tenant-policy" },
+        "parameter": [{ "name": "organization", "valueReference": { "reference": "Organization/clinic-a" } }]
+      }
+    ]
+  }
+}
