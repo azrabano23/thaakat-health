@@ -355,6 +355,11 @@ export const CLUSTERS: Cluster[] = [
 // Transparent matcher: how many of a cluster's required tags are present in the assembled record?
 // minMatch is a floor, not first-match-wins — every cluster is evaluated against every record,
 // which is what keeps the other two quiet when one patient's pattern fires.
+//
+// Ranking is by NUMBER of matched findings, with confidence only as a tiebreak. Ranking by
+// confidence alone penalises the broader cluster: 4-of-6 endometriosis findings (0.67) would lose
+// to 3-of-4 celiac findings (0.75), so a patient matching both gets narrated the thinner pattern.
+// Callers take [0] as "the pattern", so more corroborating findings has to win.
 export function matchClusters(record: Finding[]): ClusterMatch[] {
   const present = new Set(record.flatMap((f) => f.tags));
   return CLUSTERS.map((cluster) => {
@@ -362,5 +367,5 @@ export function matchClusters(record: Finding[]): ClusterMatch[] {
     return { cluster, matched, confidence: matched.length / cluster.requiredTags.length };
   })
     .filter((m) => m.matched.length >= m.cluster.minMatch)
-    .sort((a, b) => b.confidence - a.confidence);
+    .sort((a, b) => b.matched.length - a.matched.length || b.confidence - a.confidence);
 }

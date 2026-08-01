@@ -74,7 +74,15 @@ export class ThaakatVoiceClient {
       if (this.ready && this.ws?.readyState === WebSocket.OPEN) this.ws.send(pcm);
     });
 
-    const ws = new WebSocket(AGENT_WS_URL, [scheme, tokenBody.access_token]);
+    // From here on the mic is live. Anything that throws before we hand control back must release
+    // it, or the browser keeps showing a recording indicator for a call that never connected.
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(AGENT_WS_URL, [scheme, tokenBody.access_token]);
+    } catch (e) {
+      this.mic.stop();
+      throw e;
+    }
     ws.binaryType = 'arraybuffer';
     this.ws = ws;
 
@@ -104,9 +112,15 @@ export class ThaakatVoiceClient {
       }
     };
 
+    // The handshake can also fail asynchronously, long after start() resolved — conference wifi
+    // dropping mid-call is the expected case. The caller's try/catch cannot see that, so release
+    // the mic here rather than leaving it open behind a dead socket.
     ws.onclose = () => {
       if (this.keepAlive) clearInterval(this.keepAlive);
+      this.keepAlive = null;
       this.ready = false;
+      this.mic.stop();
+      this.player.close();
       if (!this.stopped) this.events.onStatus?.('idle');
     };
   }

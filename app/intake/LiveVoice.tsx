@@ -79,6 +79,10 @@ export default function LiveVoice({
     try {
       await client.start();
     } catch (e) {
+      // start() may already have taken the mic before failing — release it, or the browser keeps
+      // showing a recording indicator for a call that never connected.
+      client.stop();
+      clientRef.current = null;
       setStatus('error');
       setError((e as Error).message);
     }

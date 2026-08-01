@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { commitChart, type ChartInput } from '@/lib/medplum';
 
 export const runtime = 'nodejs';
+// commitChart is the longest chain in the app: a client login, a Patient lookup, then ~10
+// sequential createResource round-trips to api.medplum.com. On conference wifi that can run past
+// Vercel's 10s default and truncate mid-write, leaving a half-written chart and a page that shows
+// "unavailable" for a commit that partly succeeded. 60s is the ceiling on both Hobby and Pro.
+export const maxDuration = 60;
 
 // POST ChartInput -> writes DetectedIssue/Condition/Observations/DiagnosticReport/
 // ServiceRequest/Claim(preauth)/Task.

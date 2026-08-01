@@ -4,19 +4,19 @@
       "name": "thaakat-intake-to-fhir",
       "id": "REPLACE_WITH_BOT_ID",
       "source": "bots/intake-to-fhir.ts",
-      "dist": "bots/intake-to-fhir.ts"
+      "dist": "dist/intake-to-fhir.js"
     },
     {
       "name": "thaakat-eligibility",
       "id": "REPLACE_WITH_BOT_ID",
       "source": "bots/eligibility.ts",
-      "dist": "bots/eligibility.ts"
+      "dist": "dist/eligibility.js"
     },
     {
       "name": "thaakat-reread-on-imaging",
       "id": "REPLACE_WITH_BOT_ID",
       "source": "bots/reread-on-imaging.ts",
-      "dist": "bots/reread-on-imaging.ts"
+      "dist": "dist/reread-on-imaging.js"
     }
   ]
 }
