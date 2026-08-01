@@ -1,48 +1,59 @@
-# Thaakat — the 2-minute demo (run-of-show)
+# Thaakat — the demo script (plain English)
 
-**Setup:** two browser tabs — (1) `thaakat-health.vercel.app`, (2) `/intake`. Screen-record and talk over it. Hard-refresh both first (Cmd+Shift+R). If conference wifi is shaky, use **"Play demo"** (offline-safe replay) instead of the live voice call. Total: ~120 s. Narration ≈ 300 words at a calm pace.
-
-> **The through-line to hold:** it's not "a voice scribe" and it's not "a radiomics tool." It's **the voice-first front door that triages you to the right specialist the first time.** Misrouting is the villain. Radiomics is a supporting act.
-
----
-
-### 0:00–0:18 · The hook — LAUNCH PAGE (hero)
-**[SCREEN]** Land on the hero: *"She wasn't hard to diagnose. She was sent to the wrong doctor — for ten years."*
-**[SAY]** "This is the median endometriosis patient. Ten years to a diagnosis, seven doctors. Her GP said cramps, GI said IBS, urology said recurrent UTIs, a radiologist called her scan normal. She wasn't a medical mystery — she was sent to the *wrong* doctor, every single time. One in ten women live this."
-
-### 0:18–0:32 · The insight — scroll to the solution
-**[SCREEN]** Scroll past the "Meet Maria" story to the heading *"A voice-first front door that triages you to the right specialist."*
-**[SAY]** "Diagnostic delay isn't a knowledge problem — it's a *routing* problem. So we built the voice-first front door: you call, and before you ever see a doctor, Thaakat triages you to the right specialist the first time."
-
-### 0:32–1:20 · The live run — switch to /intake, hit "Play demo"
-**[SCREEN]** `/intake`. Click **Play demo**. Let the beats land as you narrate.
-**[SAY]** "She just talks — no forms. Deepgram's voice agent charts the conversation into a real medical record as she speaks. It's already read her whole history, so it asks the right thing — *'I can see a CA-125 nobody followed up.'* That lookup is Moss, in eight milliseconds, mid-sentence.
-*(triage beat appears)* — Here's the core move: it **triages** her. This is a pattern for an **OB/GYN**, not the GI and urology clinics she keeps getting sent to. *Only because a scan is relevant*, it re-reads the MRI they called 'normal' and flags what a specialist should see. It assembles the pattern nobody put together, checks her real insurance — covered, twenty-five-dollar copay — and writes the whole thing to a real chart, with a plan flagged for a human to peer-review."
-
-### 1:20–1:42 · The proof — back to LAUNCH PAGE, tech section
-**[SCREEN]** Scroll to **System architecture** + the **model card** (real ROC curve).
-**[SAY]** "None of this is a demo wrapper. Every sponsor does real work: Deepgram's live voice agent, Moss at eight milliseconds, a real radiomics model — 0.966 AUC on real, public data — **sixteen typed FHIR resources** on Medplum with three bots running on their own infrastructure, and Stedi's real eligibility check. It's a chart a hospital can ingest — not a chat log."
-
-### 1:42–2:00 · Impact + close — back to the hero / motto
-**[SCREEN]** The motto: *"The answer was already there. Thaakat routes you to it."*
-**[SAY]** "Thaakat compresses a decade-long, misrouted odyssey into one conversation. Endometriosis is the proof — the hardest case — but the engine routes *any* misrouted condition to the right specialist. This is the doctor's visit of the future: voice-first, and buildable today. The answer was already there. We route you to it."
+Read this aloud over the screen. Simple words, no jargon. ~2 minutes.
+Two surfaces: the **launch page** (`thaakat-health.vercel.app`) is the story; the **demo** (`/intake`) is where you watch it work.
 
 ---
 
-## If you only get 30 seconds (elevator version)
-"Women with endometriosis see seven doctors over ten years — not because it's unknowable, but because they're *misrouted*: GI, urology, psych. Thaakat is the voice-first front door — you talk, and before you see a doctor it charts the conversation, triages you to the right specialist, re-reads the scan they missed, and hands you a covered, peer-reviewed plan. Every sponsor does real work; it writes a real FHIR record. One conversation instead of a decade."
+## 1 · The problem — start here, make them feel the scale
+*(on the launch page hero)*
 
-## Beat-by-beat cheat sheet (what's on screen ↔ which sponsor)
-| Demo beat | Sponsor doing the work | The line |
-|---|---|---|
-| She talks; timeline charts itself | **Deepgram** (voice) + **Claude** (reasoning) | "charts the conversation as she speaks" |
-| Chart-aware question | **Moss** (~8 ms retrieval) | "a CA-125 nobody followed up" |
-| **Triage → route to OB/GYN** | **Claude** (the triage) | "the core move — routed to the right specialist" |
-| Re-read the "normal" scan *(conditional)* | radiomics (AUC 0.966) | "only because a scan is relevant" |
-| Cost & coverage | **Stedi** (real 270/271 EOB) | "covered, $25 copay" |
-| Writes the record + peer-review flag | **Medplum** (16 FHIR resources, bots) | "a real chart, peer-reviewed by a human" |
+> "Endometriosis is a disease where tissue like the lining of the womb grows where it shouldn't. It causes severe, disabling pain — and it affects **1 in 10 women in the world: 190 million people.**
+>
+> Here's the cruel part: **it barely shows up on scans.** There's no quick test. The only sure way to diagnose it is **invasive surgery.** So women wait **7 to 10 years** for an answer — passed from doctor to doctor, told it's just bad periods, or IBS, or stress. They get **sent to the wrong specialists** — a stomach doctor for the pain, a urologist for the bladder symptoms — for years. All while they're in pain, missing work, and often **unable to have children.** Many end up choosing surgery just for a *chance* at a faster answer."
 
-## Landmines (don't say these)
-- Don't call it a "diagnosis" — it **flags / suggests / routes**; the model is **investigational decision-support**.
-- Don't lead with radiomics — it's the *supporting* capability, gated behind triage.
-- Report the model honestly: "0.966 AUC on real GLENDA data, frame-level, research-grade" — the honesty is the credibility.
+## 2 · The one big claim
+> "**Thaakat takes a disease that takes 7 to 10 years to diagnose — and brings it down to a single visit.**"
+
+## 3 · The solution, in one line
+> "Thaakat is a voice assistant that listens to a patient, builds their complete medical picture, and hands the doctor a clear recommendation — *before* the patient ever sits in the exam room."
+
+## 4 · How it works — the workflow *(switch to the /intake demo; each step names one sponsor, in plain words)*
+
+> **"1. The patient calls and just talks.** No forms — she describes her symptoms out loud, in her own words.
+> — *This is **Deepgram**, the voice. It lets her speak naturally, and it actually understands medical words — it hears 'CA-125' and 'painful intercourse' correctly, where a normal voice assistant would butcher them.*
+>
+> **2. As she talks, her words become real medical notes — and the system is already pulling up her whole history to ask smarter questions.**
+> — *That instant memory is **Moss**. While she's still mid-sentence, it searches her entire multi-year record, so Thaakat can say 'I see a test from last year nobody followed up on.' It's fast enough that there's no awkward pause.*
+> — *And the thinking — working out what's going on and what to recommend — is **Claude**, the brain of the call.*
+>
+> **3. Everything is encrypted and protected the whole way — this is real medical data, handled to HIPAA standards — and saved as a proper medical chart, not a chat transcript.**
+> — *That's **Medplum**, the record system hospitals actually use. Everything Thaakat finds becomes a real, permanent, auditable chart — including a note flagging a human specialist to double-check it.*
+>
+> **4. That lands in front of a doctor — our customer.** They see the whole picture in one place, plus a clear recommendation: **does this patient need surgery, a scan, or just the right specialist?** No more dead-end referrals — the doctor knows the next step.
+>
+> **5. If a scan is part of it, the doctor uploads it, and Thaakat re-reads it** — catching the early signs of endometriosis a normal read misses. This is the part no one else does.
+>
+> **6. It even checks the insurance.**
+> — ***Stedi** tells the patient, up front, what's covered and what it'll cost — so the next step actually happens instead of getting stuck."*
+
+## 5 · The model — end on accuracy (kept simple)
+> "And that scan re-reader isn't a gimmick. It's a real model, trained on **real medical images**, and on the accuracy score doctors use it scored **0.97 out of 1** — meaning it's right the large majority of the time it looks. We're honest about it: it's there to **flag things for a specialist, never to replace the doctor.**"
+
+## Close
+> "So that's Thaakat. A disease that steals ten years and a woman's chance at children — turned into **one conversation, one clear recommendation, one visit.** The answer was already there. We just get her to it."
+
+---
+
+## The sponsors in one plain sentence each (for questions)
+- **Deepgram** — *the voice.* Lets the patient just talk, and understands medical words correctly.
+- **Moss** — *the memory.* Instantly searches her whole history while she's still talking, so the questions are smart.
+- **Claude** — *the brain.* Works out what's going on and what to recommend.
+- **Medplum** — *the medical record.* Saves everything as a real, proper chart a hospital can use — encrypted and audited.
+- **Stedi** — *the insurance check.* Tells you up front what's covered and what it costs.
+
+## Two things to get right
+- **Never say "diagnosis."** Thaakat *flags*, *recommends*, and *routes to the right doctor.* The scan tool is a helper for a specialist, not a replacement.
+- **Don't lead with the scan/radiomics.** The story is: get her to the right doctor fast. The scan re-read is one step, only when it's relevant.
+
+> Note on the number: I used **1 in 10 (190 million)** — the World Health Organization's figure — rather than 1 in 4, because a doctor in the room would push back on 1 in 4, and 190 million is already staggering.
