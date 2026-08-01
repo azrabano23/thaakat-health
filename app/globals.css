@@ -84,8 +84,8 @@
 
   --text: #191512;      /* warm near-black ink */
   --text-2: #423d36;
-  --muted: #6f695f;
-  --faint: #a49b8c;
+  --muted: #635d53;     /* darkened for legibility */
+  --faint: #857a68;     /* darkened — was too light to read on paper */
 
   --signal: #d63f28;    /* vermilion, deepened for light legibility */
   --signal-soft: #e8543a;

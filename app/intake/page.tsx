@@ -18,7 +18,7 @@ import {
   type ClusterMatch,
 } from '@/lib/clusters';
 import type { ContextDoc } from '@/lib/moss';
-import { RecordTimeline, ConversationPanel } from '@/components/ui';
+import { RecordTimeline, ConversationPanel, Nav } from '@/components/ui';
 import LiveVoice from './LiveVoice';
 
 type Turn = { role: 'patient' | 'thaakat'; text: string };
@@ -203,6 +203,16 @@ export default function Intake() {
   return (
     <div className="paper console-wrap">
       <div className="field" aria-hidden="true" />
+      <div className="grain" aria-hidden="true" />
+      <Nav
+        links={[
+          { label: 'The problem', href: '/#problem' },
+          { label: 'How it works', href: '/#how' },
+          { label: 'The tech', href: '/#tech' },
+          { label: 'Founders', href: '/#founders' },
+        ]}
+        cta={{ label: 'Back to site', href: '/' }}
+      />
       <main className="shell">
         {/* ── header ── */}
         <div className="console-head">
