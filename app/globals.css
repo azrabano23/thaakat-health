@@ -858,6 +858,19 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
   .contour-draw { stroke-dashoffset: 0; }
 }
 
+/* ── Handling the record ───────────────────────────────────────────────────────
+   Reuses .spread, but the first cell is a short label rather than a statistic, so it
+   overrides .spread-fig's display-size number and aligns to the body copy instead. */
+.handling-row { align-items: start; }
+.handling-control {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
 /* ── Founders photo ────────────────────────────────────────────────────────────
    Group shot above the two founder cards. Capped height with object-fit so a
    tall phone photo can't push the cards off the fold, and the caption carries

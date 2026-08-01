@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { label: 'The problem', href: '#problem' },
   { label: 'How it works', href: '#how' },
   { label: 'The tech', href: '#tech' },
+  { label: 'Handling', href: '#handling' },
   { label: 'Founders', href: '#founders' },
 ];
 
@@ -48,6 +49,37 @@ const METRICS = [
 ];
 
 const BUYERS = ['Academic medical centers', 'Fertility clinics', 'Women’s-health clinics', 'Imaging centers'];
+
+// How the record is handled in transit and at rest. Every row here is a control that is actually
+// in the codebase — the transport headers are set in next.config.mjs, the key boundary is why
+// /api/deepgram/token exists at all. Don't add a row for something we haven't built.
+const HANDLING = [
+  {
+    control: 'TLS everywhere',
+    body: 'Nothing moves over plain HTTP. The browser reaches us over HTTPS, and every hop out — Deepgram, Moss, Medplum, Stedi — is TLS 1.2+. The voice stream is a WSS socket, not WS.',
+    where: 'HSTS · upgrade-insecure-requests',
+  },
+  {
+    control: 'Keys never reach the browser',
+    body: 'No credential is bundled into client JavaScript. The browser gets a Deepgram token that expires in five minutes; the real keys stay in server routes, and Medplum and Stedi are only ever called server-side.',
+    where: '/api/deepgram/token',
+  },
+  {
+    control: 'Pinned egress',
+    body: 'A Content-Security-Policy limits outbound connections to the four sponsor endpoints. Injected script has nowhere to send a record to, because every other destination is refused by the browser.',
+    where: 'CSP connect-src',
+  },
+  {
+    control: 'FHIR system of record',
+    body: 'The record lives in Medplum — encrypted at rest, access-controlled, and audited. We keep no shadow copy: nothing clinical is written to local storage or a log line.',
+    where: 'Medplum · AWS',
+  },
+  {
+    control: 'Synthetic patients only',
+    body: 'Every patient in this demo is invented. No real PHI has ever entered the system, so there is nothing here to breach — and the controls above are what we carry into a deployment where that changes.',
+    where: 'Seeded fixtures',
+  },
+];
 
 // Clinical backing — the product is grounded in guidelines + peer-reviewed literature (docs/EVIDENCE.md).
 const CLINICAL_BACKING = [
@@ -406,11 +438,51 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ===================== 7 · MEET THE FOUNDERS ===================== */}
-        <section className="section" id="founders">
+        {/* ================== 7 · HANDLING THE RECORD ================== */}
+        <section className="section" id="handling">
           <div className="shell">
             <SectionHeading
               index="№ 06"
+              eyebrow="Handling the record"
+              title="A record worth assembling is a record worth protecting."
+              lede="Thaakat reads a woman's whole medical history, which is exactly the kind of data that should never be casually handled. So the transport rules are set in code, not in a policy document."
+            />
+
+            <div className="spread" style={{ marginTop: 34 }}>
+              <div className="spread-h">
+                <span>Control</span>
+                <span>What it means</span>
+                <span>Where</span>
+              </div>
+              {HANDLING.map((h) => (
+                <div key={h.control} className="spread-row handling-row">
+                  <div className="handling-control">{h.control}</div>
+                  <div className="spread-txt">{h.body}</div>
+                  <div className="spread-src">{h.where}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="aside" style={{ marginTop: 32 }}>
+              <span className="label-sig">On HIPAA, honestly</span>
+              <h3>The technical safeguards are built. The paperwork is what a pilot buys.</h3>
+              <p style={{ maxWidth: '76ch' }}>
+                Compliance is usually retrofitted onto a product that was built without it, which is why it takes so
+                long. We went the other way: the safeguards HIPAA asks for are already in the architecture. Encryption
+                in transit and at rest, no keys in the browser, a real audit trail, and minimum-necessary access are all
+                here now. What a first clinical pilot adds is contractual, not architectural:{' '}
+                <strong>Business Associate Agreements</strong> with each vendor in the path, and the enterprise tiers
+                that sign them.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ===================== 8 · MEET THE FOUNDERS ===================== */}
+        <section className="section" id="founders">
+          <div className="shell">
+            <SectionHeading
+              index="№ 07"
               eyebrow="Meet the founders"
               title="The rare team that can actually build this."
               lede="Voice, real-time retrieval, FHIR, and a trained imaging model — plus the lived research behind the moat."
