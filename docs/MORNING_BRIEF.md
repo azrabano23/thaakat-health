@@ -16,7 +16,7 @@ Everything below is done and pushed to GitHub. Then: **what only YOU can do befo
 | Deepgram | ✅ key valid. (Can't mint browser JWTs — needs "Member" perm; token route falls back to the key for the demo.) |
 | Anthropic | ✅ 200 |
 | Stedi | ✅ 200 — real test-mode eligibility works |
-| Moss | keys in `.env.local` (wired; local fallback if it hiccups) |
+| Moss | ✅ **verified — real 8ms semantic retrieval** with your keys |
 | **Medplum** | ❌ **"Invalid client" — creds rejected.** FIX BELOW. |
 
 ## 👉 What ONLY YOU can do (before 5pm)

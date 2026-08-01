@@ -12,7 +12,7 @@ The hackathon publishes **no rubric** — all 6 judges score on personal taste. 
 
 ## The 6 winning moves (each mapped to judges)
 1. **Show the evidence as a real FHIR `DetectedIssue`** — `author` = the radiomics `Device`, `evidence` → the real `Observation`/`ImagingStudy`, viewed *inside Medplum* (GraphQL/resource viewer), not a chat bubble. Say "DetectedIssue" out loud. → **Cody, Diana, Ana.** (Done in `lib/medplum.ts`.)
-2. **Live Moss latency HUD** — on screen each retrieval: "Moss: 7ms." Say: a hosted vector DB here is 150–300ms and audible; this wasn't. → **Sri, Victor, Naomi.** (Badge in `app/intake`.)
+2. **Live Moss latency HUD** — on screen each retrieval: "Moss: ~8ms" (**verified live with our keys — real, reproducible**). Say: a hosted vector DB here is 150–300ms and audible; this wasn't. → **Sri, Victor, Naomi.** (Badge in `app/intake`.)
 3. **Coverage via Medplum's canonical pattern** — `CoverageEligibilityRequest` → Insurance Eligibility Bot → `CoverageEligibilityResponse` on Stedi (from `medplum-eligibility-demo`); show the `insurance.item` payload, not a yes/no. → **Cody, Victor.**
 4. **Deepgram's own healthcare doctrine, visibly** — **Nova-3 Medical + keyterms** (endometrioma, dysmenorrhea, dyspareunia…); show a confidence score on a critical field; when ambiguous, Thaakat says so and **escalates to a human with the transcript**. → **Victor, Naomi.** (Model + keyterms set in `lib/useVoiceAgent.ts`.)
 5. **Frame the re-read as a closed loop (Diana's exact thesis)** — a Medplum `Subscription` → Bot re-runs radiomics whenever new imaging/chart data lands, so prior charts get silently re-scored as the model improves. Use her words: "closed loop, not open loop; queryable, not siloed."
