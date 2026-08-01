@@ -131,8 +131,14 @@ Diagnostic delay is usually blamed on "some diseases are hard." It mostly isn't 
 ```bash
 pnpm install
 cp .env.example .env.local   # fill keys — see docs/SPONSORS.md
-pnpm dev                     # http://localhost:3000  →  /intake  →  "Play demo"
+pnpm seed:moss               # build the Moss retrieval index (once, and after criteria/record edits)
+pnpm dev                     # http://localhost:3000  →  /intake  →  "Play demo" or "Talk to Thaakat"
 ```
+
+> ⚠️ **Don't leave blank keys in `.env.local`.** Next loads `.env.local` *over* `.env`, so an
+> unfilled copy of `.env.example` shadows every real key with an empty string — and Moss, Stedi
+> and Medplum all degrade silently to their offline fallbacks while the UI still looks fine.
+> Delete the lines you haven't filled in. Live voice: see [`docs/VOICE_AGENT.md`](docs/VOICE_AGENT.md).
 
 Medplum bots (deploy separately, not on Vercel): `cd medplum && npx medplum bot deploy *`
 

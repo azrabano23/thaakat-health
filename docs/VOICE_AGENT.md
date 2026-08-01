@@ -91,6 +91,17 @@ Run against `wss://agent.deepgram.com/v1/agent/converse` with the key in `.env`,
   (record_symptom)` with tags `pelvic-pain, dysmenorrhea, gi-cyclical`.
 - Safety framing held: "something I want to take seriously." No condition named.
 
+A second pass drove the tools against the **running app** rather than canned responses:
+`analyze_imaging` → `/api/imaging/analyze` returned both radiomics findings, `retrieve_criteria`
+→ `/api/moss/query` returned `backend=moss` at 3ms, and the agent replied "Let me look at that
+MRI myself." Four consecutive runs completed the tool loop.
+
+One run out of five died mid-call with `Error: Failed to think. Please check your agent.think
+settings.` after two tool calls. It did not reproduce across three immediate re-runs with the
+same settings, so it reads as a transient fault in the managed `think` provider rather than a
+config problem — but it is a failure mode that can land during a live demo, and ▶ Play demo is
+the answer if it does.
+
 **Not yet verified:** the same config *in a browser with a real mic*. The probe injects text
 rather than speech, so mic capture, playback and barge-in are the least-exercised paths. Do one
 live call before demoing, and keep ▶ Play demo as the fallback.
