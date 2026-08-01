@@ -57,7 +57,7 @@ export default function Intake() {
   }
 
   const voice = useVoiceAgent({
-    systemPrompt: THAAKAT_SYSTEM_PROMPT + "\n\nThe patient's prior records are already loaded. Ask about the orphaned CA-125 and the pelvic MRI that was read as normal. Call analyze_imaging when she mentions the MRI, retrieve_criteria as you go, then check_eligibility and commit_chart to finish. Keep every turn to one short spoken sentence.",
+    systemPrompt: THAAKAT_SYSTEM_PROMPT + "\n\nThe patient's prior records are already loaded. Ask about the orphaned CA-125 and the pelvic MRI that was read as normal. Call analyze_imaging when she mentions the MRI, retrieve_criteria as you go, then check_eligibility and commit_chart to finish. If you're ever unsure, or a finding is high-acuity, say so plainly and flag it for a human clinician to review — never guess. Keep every turn to one short spoken sentence.",
     greeting: "Hi, I'm Thaakat. I've pulled your records together across your doctors. Take your time — tell me what's been going on.",
     functions: FUNCTIONS,
     onTranscript: say,

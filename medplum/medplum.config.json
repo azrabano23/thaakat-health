@@ -11,6 +11,12 @@
       "id": "REPLACE_WITH_BOT_ID",
       "source": "bots/eligibility.ts",
       "dist": "bots/eligibility.ts"
+    },
+    {
+      "name": "thaakat-reread-on-imaging",
+      "id": "REPLACE_WITH_BOT_ID",
+      "source": "bots/reread-on-imaging.ts",
+      "dist": "bots/reread-on-imaging.ts"
     }
   ]
 }
