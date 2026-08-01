@@ -24,7 +24,12 @@ export async function POST() {
   const key = process.env.DEEPGRAM_API_KEY;
   if (!key) {
     return NextResponse.json(
-      { error: 'DEEPGRAM_API_KEY is not set. Add it to .env.local and restart `pnpm dev`.' },
+      {
+        error:
+          'DEEPGRAM_API_KEY is not set. Locally: add it to .env.local and restart `pnpm dev`. ' +
+          'On Vercel: Settings → Environment Variables, then redeploy (a .env file is gitignored ' +
+          'and never ships).',
+      },
       { status: 500 },
     );
   }
@@ -45,8 +50,30 @@ export async function POST() {
   }
 
   if (!res.ok) {
-    // This key can't mint JWTs. Fall back to the raw key so the demo still runs — note this does
-    // put the key in the browser, so it is a DEMO-ONLY path. A Member-scoped key removes it.
+    // This key can't mint JWTs, so the only way to keep voice working is to hand the browser the
+    // raw key. On localhost that's an acceptable demo shortcut. On a public deploy it publishes a
+    // live credential to anyone who opens the network tab — CLAUDE.md's "never ship a key to the
+    // browser" rule, broken in the most literal way.
+    //
+    // So the fallback is refused off localhost unless someone opts in deliberately. Failing loudly
+    // here is recoverable (use ▶ Play demo, or set a Member-scoped key); a leaked key on a URL
+    // handed to judges is not.
+    const isLocal = process.env.NODE_ENV !== 'production';
+    const optedIn = process.env.ALLOW_DEEPGRAM_KEY_IN_BROWSER === 'true';
+    if (!isLocal && !optedIn) {
+      console.error('[deepgram] auth/grant refused (%s) and raw-key fallback is off in production.', res.status);
+      return NextResponse.json(
+        {
+          error:
+            'Live voice is unavailable: this DEEPGRAM_API_KEY cannot mint short-lived tokens, and ' +
+            'sending the raw key to the browser is disabled on a deployed URL. Create a key with ' +
+            'the "Member" role at console.deepgram.com → Settings → API Keys. To accept the risk ' +
+            'anyway, set ALLOW_DEEPGRAM_KEY_IN_BROWSER=true.',
+        },
+        { status: 503 },
+      );
+    }
+
     console.warn(
       '[deepgram] auth/grant refused (%s) — falling back to the raw API key in the browser. ' +
         'Use a Member-scoped key to mint short-lived tokens instead.',
