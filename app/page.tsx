@@ -49,45 +49,6 @@ const METRICS = [
 
 const BUYERS = ['Academic medical centers', 'Fertility clinics', 'Women’s-health clinics', 'Imaging centers'];
 
-// One run of /intake — each sponsor doing real work, with the proof we verified live.
-const SPONSOR_RUN = [
-  {
-    n: '01',
-    tool: 'Deepgram',
-    role: 'The voice sensor',
-    body: 'A woman’s symptom story is the richest data she has, and forms and rushed visits throw most of it away. Deepgram’s Voice Agent (Nova-3 Medical for clinical vocabulary, Aura TTS, barge-in) lets her just talk — with Claude reasoning as the brain of the call. We use it because voice is the only interface that captures the full story without making her fill out anything, and Nova-3 Medical is the one STT that won’t garble “dyspareunia” or “CA-125.”',
-    proof: 'Live socket',
-  },
-  {
-    n: '02',
-    tool: 'Moss',
-    role: 'Chart-aware retrieval',
-    body: 'To ask a smart question mid-conversation, Thaakat has to search her entire multi-year record between her sentences. A normal cloud vector DB (150–300 ms) would make that an audible pause; Moss returns in ~8 ms, so the retrieval is invisible. We use it retrieval-heavy — several lookups per turn over her record and the diagnostic criteria — which is exactly what makes “I can see a CA-125 nobody followed up” land inside the turn, not after it.',
-    proof: '8 ms measured',
-  },
-  {
-    n: '03',
-    tool: 'Claude + radiomics',
-    role: 'The reasoning & the moat',
-    body: 'Claude is the reasoning layer: it assembles the cross-specialty cluster and extracts the transcript into a structured, coded FHIR record (forced tool-use, so it fills our schema instead of freelancing). The radiomics model is the moat Claude can’t hand another team — a real classifier that re-reads the under-read scan for the deep-infiltrating and adenomyosis signs a routine read skips.',
-    proof: 'AUC 0.9663',
-  },
-  {
-    n: '04',
-    tool: 'Medplum',
-    role: 'FHIR system of record',
-    body: 'A finding a clinician can’t verify is worthless, so everything lands as real, typed FHIR — not a chat log. One transaction writes the whole picture: a DetectedIssue (author = the radiomics Device), a RiskAssessment with the model’s confidence, an n=1 CarePlan, a CommunicationRequest flagging a human specialist to peer-review it, plus Condition, Observations, DiagnosticReport, ServiceRequest, Claim(preauth), Task — and a Provenance proving every resource is AI-derived from the transcript. We use Medplum because it makes the assembled record auditable, interoperable, and something a real EHR can ingest.',
-    proof: '16 resources / run',
-  },
-  {
-    n: '05',
-    tool: 'Stedi',
-    role: 'Coverage & the next step',
-    body: 'Surfacing “you may have endometriosis” and stopping there is the same dead end she’s hit for years. Stedi runs real 270/271 eligibility to price the confirmatory step and read whether prior auth is required — so the run ends with a covered, actionable next step, not another shrug. We use it because closing the loop to “here’s the test, here’s the cost, the auth is started” is what turns navigation into care.',
-    proof: 'Test-mode 200',
-  },
-];
-
 // Clinical backing — the product is grounded in guidelines + peer-reviewed literature (docs/EVIDENCE.md).
 const CLINICAL_BACKING = [
   { src: 'ESHRE 2022 · NICE NG73', claim: 'The symptom cluster we assemble is the guideline “suspect endometriosis” list — and a normal scan does not exclude disease. Laparoscopy is no longer the required gold standard.' },
@@ -392,30 +353,9 @@ export default function Home() {
             <SectionHeading
               index="№ 05"
               eyebrow="The demo & the tech"
-              title="Real voice. Real retrieval. A real imaging model."
-              lede="Not a wrapper. Four sponsors do real work in the loop — and the moat is a trained radiomics model reading the pixels a radiologist skipped."
+              title="Voice-first, and every sponsor doing real work."
+              lede="Not a wrapper. Deepgram, Moss, Claude, Medplum, and Stedi each do real work in one run — the conversation becomes a real, auditable medical record, priced and ready for a specialist, before you ever see a doctor."
             />
-
-            <div style={{ marginTop: 40 }}>
-              <span className="label-sig" style={{ display: 'block', marginBottom: 16 }}>
-                One run — every sponsor load-bearing, verified live
-              </span>
-              <div className="steps-ed">
-                {SPONSOR_RUN.map((s) => (
-                  <div key={s.n} className="step-ed">
-                    <span className="n">{s.n}</span>
-                    <h3>
-                      {s.tool}{' '}
-                      <span className="muted" style={{ fontWeight: 400, fontSize: '0.78em' }}>· {s.role}</span>
-                    </h3>
-                    <p>
-                      {s.body}{' '}
-                      <span className="pill pill-signal" style={{ marginLeft: 2, verticalAlign: 'middle' }}>{s.proof}</span>
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             <div style={{ marginTop: 40 }}>
               <span className="label-sig" style={{ display: 'block', marginBottom: 16 }}>
@@ -424,23 +364,7 @@ export default function Home() {
               <ArchitectureFlow />
             </div>
 
-            <div className="aside" style={{ marginTop: 26 }}>
-              <div className="row wrap" style={{ justifyContent: 'space-between', gap: 12 }}>
-                <span className="label-sig">◆ The imaging moat</span>
-                <span className="pill pill-signal pill-dot">Founder’s own research</span>
-              </div>
-              <h3>A trained radiomics model, not a mock.</h3>
-              <p style={{ maxWidth: '74ch' }}>
-                Thaakat’s moat is Azra’s radiomics work, which turns routine MRI and ultrasound into non-invasive
-                endometriosis signal <em>before</em> surgery. A real <strong>scikit-image radiomics</strong> pipeline
-                (GLCM + first-order texture, the family PyRadiomics computes) extracts real features from real, public
-                imaging, with an honest, cross-validated result. We report it as{' '}
-                <strong>investigational decision-support</strong>, never autonomous diagnosis. It’s the hard modality
-                other teams can’t stand up in a weekend.
-              </p>
-            </div>
-
-            <div style={{ marginTop: 34 }}>
+            <div style={{ marginTop: 40 }}>
               <span className="label-sig" style={{ display: 'block', marginBottom: 6 }}>
                 The model — real, trained, honestly reported
               </span>

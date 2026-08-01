@@ -46,8 +46,8 @@ const ARCH: ArchNode[] = [
     role: 'Re-reads the scan',
     icon: <ScanIcon />,
     moat: true,
-    tag: 'the moat',
-    note: 'The part no other team can copy in a weekend. A real trained model reads the *texture* of the MRI a radiologist called “normal” (GLCM + first-order features, AUC 0.966 on the real GLENDA dataset) and flags the deep-endometriosis and adenomyosis signs the human eye skips on a routine read. Investigational decision-support — it raises a question, never a diagnosis.',
+    tag: 'deep re-read',
+    note: 'Part of the deep research: a real trained model reads the *texture* of the MRI a radiologist called “normal” (GLCM + first-order features, AUC 0.966 on the real, public GLENDA dataset) and flags the deep-endometriosis and adenomyosis signs the human eye skips on a routine read. Investigational decision-support — it raises a question, never a diagnosis.',
   },
   {
     name: 'Medplum',
