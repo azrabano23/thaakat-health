@@ -104,6 +104,8 @@ export class ThaakatToolRunner {
         return this.retrieveCriteria(String(args.query ?? ''));
       case 'record_symptom':
         return this.recordSymptom(args);
+      case 'triage':
+        return this.triage();
       case 'analyze_imaging':
         return this.analyzeImaging(String(args.studyId ?? this.patient.imaging?.studyId ?? ''));
       case 'assemble_record':
@@ -162,6 +164,41 @@ export class ThaakatToolRunner {
       tags,
     });
     return { recorded: true, label, tags, findings_on_timeline: this.record.length };
+  }
+
+  // ── Triage & routing: the FIRST job — which specialist, and does she even need a scan? ──
+  // Women with these presentations are misrouted for years; route to the right specialty up front.
+  private triage() {
+    this.events.onPhase?.('interview');
+    const top = matchClusters(this.record)[0] ?? null;
+    const SPECIALTY: Record<string, string> = {
+      endometriosis: 'an OB/GYN — ideally an endometriosis specialist',
+      sjogrens: 'a rheumatologist',
+      celiac: 'a gastroenterologist',
+    };
+    if (!top) {
+      return {
+        routed: false,
+        instruction:
+          'Not enough yet to route confidently. Keep gathering; or if her symptoms are mild and ' +
+          'non-specific, reassure her this may not need a specialist and suggest primary-care follow-up.',
+      };
+    }
+    const specialty = SPECIALTY[top.cluster.id] ?? 'the right specialist';
+    const needsImaging = /mri|ultrasound|imaging|scan|pelvic/i.test(top.cluster.confirmatory.name);
+    return {
+      routed: true,
+      route_to: specialty,
+      confidence: Math.round(top.confidence * 100),
+      needs_imaging: needsImaging,
+      misrouting: 'This presentation is commonly sent to GI, urology, or primary care for years before anyone routes it correctly.',
+      instruction:
+        `Tell her plainly she should see ${specialty}, and that people with her symptoms are often ` +
+        'misrouted for years. ' +
+        (needsImaging
+          ? 'A targeted scan is worth doing — if she has one that was called normal, offer to re-read it.'
+          : 'She likely does NOT need a scan — say so; the priority is getting her to the right specialist.'),
+    };
   }
 
   // ── The moat: re-read the scan that was called normal ──
