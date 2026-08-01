@@ -35,6 +35,17 @@ export type Cluster = {
 
 export type ClusterMatch = { cluster: Cluster; matched: string[]; confidence: number };
 
+// Charted clinical data for the patient banner (the EHR-style header a clinician reads first).
+// flag drives the color: 'high'/'low' = out of range, the thing a rushed eye skims past.
+export type Vital = { label: string; value: string; unit?: string; flag?: 'high' | 'low' | 'normal' };
+export type Lab = {
+  label: string;
+  value: string;
+  ref: string; // reference range, shown small
+  flag?: 'high' | 'low' | 'normal';
+  orphaned?: boolean; // out of range and never acted on — the signal already on file
+};
+
 // A seeded demo patient: a longitudinal record scattered across specialists, plus the scripted
 // turn where she supplies the piece the chart never captured.
 export type DemoPatient = {
@@ -42,6 +53,20 @@ export type DemoPatient = {
   name: { given: string; family: string };
   headline: string; // one line under the selector
   payer: 'aetna' | 'uhc'; // which Stedi test-mode identity to price against
+  demographics: { age: number; sex: string; mrn: string }; // synthetic — banner header
+  chart: {
+    chiefComplaint: string; // the starting point / presenting problem
+    symptoms: string[]; // presenting symptoms in the patient's words
+    pmh: string[]; // past medical history
+    psh: string[]; // past surgical history
+    meds: string[]; // current medications
+    allergies: string[]; // drug allergies (NKDA if none)
+    family: string[]; // relevant family history
+    social?: string; // one-line social history
+    pathology?: string; // biopsy / tissue diagnosis status (the confirmatory gate)
+  };
+  vitals: Vital[]; // most-recent charted vitals
+  labs: Lab[]; // key labs across the record, with the orphaned out-of-range ones flagged
   record: Finding[];
   retrievalQuery: string; // what Thaakat asks Moss over her whole record
   question: string; // the follow-up Thaakat appends after citing what retrieval returned
@@ -70,6 +95,38 @@ const MARIA: DemoPatient = {
   // (Claim(use="preauthorization") + Task). Aetna test-mode returns "U"/undetermined — with that
   // identity the demo silently skips PA entirely.
   payer: 'uhc',
+  demographics: { age: 31, sex: 'Female', mrn: 'MRN 22-910-43' },
+  chart: {
+    chiefComplaint: 'Cyclical pelvic pain for 3 years, deep pain with intercourse, now 14 months trying to conceive without success.',
+    symptoms: [
+      'Pelvic pain worst 1–2 days before menses',
+      'Deep dyspareunia',
+      'Painful bowel movements during period',
+      'Heavy menstrual bleeding with clots',
+      'Cyclical fatigue, missing work',
+    ],
+    pmh: ['Dysmenorrhea since menarche (age 12)', 'Provisional IBS (2023)', 'Iron-deficiency anemia', 'Migraine with aura'],
+    psh: ['Appendectomy (age 19)', 'No diagnostic laparoscopy performed'],
+    meds: ['Ibuprofen 600 mg PRN', 'Combined OCP — trialed, discontinued (breakthrough pain)', 'Ferrous sulfate 325 mg daily'],
+    allergies: ['Penicillin (rash)'],
+    family: ['Mother — endometriosis, diagnosed at hysterectomy', 'Sister — infertility'],
+    social: 'Non-smoker; occasional alcohol; product designer; nulligravid (G0P0)',
+    pathology: 'No laparoscopy performed — no histologic diagnosis on file. Surgery remains the diagnostic gate she has waited 3 years for.',
+  },
+  vitals: [
+    { label: 'BP', value: '118/76', unit: 'mmHg', flag: 'normal' },
+    { label: 'HR', value: '84', unit: 'bpm', flag: 'normal' },
+    { label: 'Temp', value: '98.4', unit: '°F', flag: 'normal' },
+    { label: 'BMI', value: '22.6', flag: 'normal' },
+    { label: 'Pain', value: '8/10', unit: 'cyclical peak', flag: 'high' },
+  ],
+  labs: [
+    { label: 'CA-125', value: '48 U/mL', ref: '< 35 U/mL', flag: 'high', orphaned: true },
+    { label: 'Hemoglobin', value: '11.1 g/dL', ref: '12.0–15.5', flag: 'low' },
+    { label: 'Ferritin', value: '11 ng/mL', ref: '15–150', flag: 'low' },
+    { label: 'CRP', value: '6.1 mg/L', ref: '< 5.0', flag: 'high' },
+    { label: 'β-hCG', value: 'Negative', ref: 'Negative', flag: 'normal' },
+  ],
   retrievalQuery: 'cyclical pelvic pain elevated CA-125 never followed up unremarkable pelvic ultrasound',
   question: 'When is the pain at its worst — and does it ever hurt during sex?',
   reply: "It's worst right before my period. And yeah… it really hurts during sex. Five doctors told me it was normal.",
@@ -157,6 +214,36 @@ const DANA: DemoPatient = {
   name: { given: 'Dana', family: 'Ruiz' },
   headline: "Sjögren's pattern · 4 clinicians, 4 years",
   payer: 'aetna',
+  demographics: { age: 44, sex: 'Female', mrn: 'MRN 31-447-08' },
+  chart: {
+    chiefComplaint: 'Years of dry eyes, dry mouth, fatigue and joint aches — each treated by a different specialist as a separate problem.',
+    symptoms: [
+      'Severe dry, gritty eyes',
+      'Dry mouth, trouble swallowing dry food',
+      'Unable to produce tears under emotional stimulus',
+      'Persistent fatigue and joint aches',
+      'Drinking ~4 L water/day',
+    ],
+    pmh: ['Severe dry eye (2021)', 'Rampant cervical dental caries', 'Persistent fatigue', 'Raynaud-like episodes'],
+    psh: ['Bilateral punctal plugs (2021)', 'Multiple dental restorations', 'No minor salivary-gland biopsy'],
+    meds: ['Artificial tears (frequent)', 'Pilocarpine — trialed', 'Ciclosporin ophthalmic emulsion'],
+    allergies: ['Sulfonamides (rash)'],
+    family: ['Mother — rheumatoid arthritis', 'Aunt — systemic lupus'],
+    social: 'Non-smoker; high-school teacher',
+    pathology: 'Minor salivary-gland (labial) biopsy never performed — the confirmatory test no single specialist ordered.',
+  },
+  vitals: [
+    { label: 'BP', value: '122/78', unit: 'mmHg', flag: 'normal' },
+    { label: 'HR', value: '74', unit: 'bpm', flag: 'normal' },
+    { label: 'Temp', value: '98.6', unit: '°F', flag: 'normal' },
+    { label: 'BMI', value: '23.4', flag: 'normal' },
+  ],
+  labs: [
+    { label: 'ANA', value: 'Positive 1:320, speckled', ref: '< 1:40', flag: 'high', orphaned: true },
+    { label: 'ESR', value: '32 mm/hr', ref: '< 20', flag: 'high' },
+    { label: 'Schirmer test', value: '4 mm / 5 min', ref: '> 10 mm', flag: 'low' },
+    { label: 'CBC', value: 'Within normal limits', ref: 'WNL', flag: 'normal' },
+  ],
   retrievalQuery: 'dry eyes dry mouth dental caries fatigue positive ANA never followed up',
   question: 'How much water are you getting through in a day — and can you still cry?',
   reply:

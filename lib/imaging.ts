@@ -35,20 +35,20 @@ const SAMPLE_STUDIES: Record<string, ImagingResult> = {
       topFeatures: ['fo_entropy', 'glcm_homogeneity', 'fo_p10'],
     },
     summary:
-      'Findings consistent with deep infiltrating endometriosis and adenomyosis — the pattern most often missed on a routine read.',
+      'Re-read of the 2024 pelvic MRI surfaces two findings under-called on the routine read: a deep-infiltrating endometriosis nodule on the left uterosacral ligament, and junctional-zone thickening consistent with adenomyosis.',
     findings: [
       {
-        label: 'Uterosacral ligament nodule',
+        label: 'Left uterosacral ligament — DIE nodule',
         narration:
-          "I'm seeing a hypointense nodule along the left uterosacral ligament — a sign consistent with deep infiltrating endometriosis that routine reads often miss.",
+          "On the re-read I'm seeing asymmetric, spiculated T2-hypointense thickening of the left uterosacral ligament — about 11 millimeters, with small T1-bright foci. That's a sign consistent with deep infiltrating endometriosis, and the original report called this study normal.",
         region: [0.44, 0.52, 0.14, 0.12],
         confidence: 0.82,
         criteriaId: 'img-die',
       },
       {
-        label: 'Junctional zone thickening',
+        label: 'Junctional zone — adenomyosis',
         narration:
-          'The junctional zone looks thickened, which can point to adenomyosis — worth a specialist confirming.',
+          'The junctional zone measures around 14 millimeters with the inner-to-outer ratio over 40 percent — consistent with adenomyosis. The routine read logged it at 9 millimeters, inside the 8-to-12 indeterminate band, and stopped there without the extra measurements.',
         region: [0.4, 0.34, 0.2, 0.16],
         confidence: 0.74,
         criteriaId: 'img-adenomyosis',
