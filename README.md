@@ -173,3 +173,4 @@ Medplum bots (deploy separately, not on Vercel): `cd medplum && npx medplum bot 
 - `docs/` — build kit, sponsor setup, extended brief · `CLAUDE.md` — coding rules
 
 **One-liner to remember:** *"Everyone's building the scribe. We built the thing that reads your whole record — including the scan they missed — and turns a decade of being dismissed into one conversation. Thaakat: bringing what's hidden into the light."*
+
